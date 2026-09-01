@@ -25,6 +25,11 @@ export const Signup = ()=>{
                toast.warning("Password must be same");
      }
 
+     const sendOTP = (e)=>{
+          e.preventDefault();
+          sendOTPtoBackend(signupData.email);
+     }
+
     return <div className = "signup-page">
          <form onSubmit={handleSubmit} className = "signup-box" action="#">
            <div>
@@ -34,7 +39,7 @@ export const Signup = ()=>{
                     value={signupData.name}
                     onChange={(e)=> setSignupData({...signupData, name:e.target.value})}
                /> */}
-              <form className="signup-otp">
+              <form onSubmit={sendOTP} className="signup-otp">
                 <input 
                     type="email" 
                     placeholder="email id"

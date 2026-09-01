@@ -9,5 +9,15 @@ axios.defaults.baseURL = isLocalhost
   export const AuthContext = createContext();
 
   export const AuthProvider = ({ children }) =>{
-    
+
+  const resendOtp = async (email) => {
+    try {
+      const res = await axios.post('/auth/resend-otp', { email });
+      return { success: true, message: res.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Resending OTP failed' };
+    }
+  };
+
+  
   }
