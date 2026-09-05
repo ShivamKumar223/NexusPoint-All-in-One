@@ -2,10 +2,10 @@ import jwt from "jsonwebtoken";
 
 import Member from "../models/member.js";
 
-const generateToken = ({name, companyId, memberId, role})=>{
+const generateToken = ({name, companyId, memberId, role, designation, skills})=>{
     const token =  jwt.sign(
         {
-            name, companyId, memberId, role
+            name, companyId, memberId, role, designation, skills
         },
          process.env.JWT_SECRET,
          {

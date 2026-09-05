@@ -7,26 +7,46 @@ const memberSchema = new mongoose.Schema(
             required : true
         },
         companyId : {
-            type : String,
-            required : true,
-        },
-        role : {
-            type : [String],
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Admin",
             required : true,
         },
         memberId: {
             type: String,
             required: true,
-            unique: true
+            unique: true,
+            trim  : true
         },
         password: {
             type: String,
             required: true
         },
-        createdAt: {
-            type: Date,
-            default: Date.now
+        role : {
+            type : [String],
+            required : true,
+            enum: [
+                "admin",
+                "project-manager",
+                "team-owner",
+                "developer"
+            ],
+        },
+        designation : {
+            type : String,
+            required : true,
+            trim : true
+        },
+        skills : {
+            type : [
+                {
+                    type : String,
+                    trim : true
+                }],
+            required : true,
         }
+    },
+    {
+        timestamps : true
     }
 );
 

@@ -3,30 +3,35 @@ import mongoose from "mongoose";
 const adminSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        trim : true
     },
     company : {
         type: String, 
-        required: true
+        required: true,
+        trim : true
     },
     role: {
-        type: [String],
-        default: ["admin"]
+        type: String,
+        default: "admin",
+        immutable : true
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        lowercase : true,
+        trim : true
     },
     password: {
         type: String,
         required: true
-    },
-    createdAt: {
-    type: Date,
-    default: Date.now
+    }
+},
+{
+    timestamps : true
 }
-});
+);
 
 const Admin = mongoose.model("Admin", adminSchema);
 

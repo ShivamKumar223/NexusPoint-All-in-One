@@ -51,7 +51,7 @@ export const getMembers = async (req, res) => {
 export const registerMember = async (req, res) =>{
 
    try{
-    const {name, role, memberId, password} = req.body;
+    const {name, role, memberId, password, designation, skills} = req.body;
     const companyId = req.user.email;
     const isExistUser = await Member.findOne({companyId, memberId});
 
@@ -62,7 +62,7 @@ export const registerMember = async (req, res) =>{
         })
     }
     else{
-        const user = await Member.create({name, companyId, role, memberId, password});
+        const user = await Member.create({name, companyId, role, memberId, password, designation, skills});
         res.status(200).json({
             success : true, 
             message : "Member's log created",
@@ -86,7 +86,7 @@ export const updateMember = async (req, res) =>{
 
     try{
         const memberId = req.params.memberId;
-        const {name, role, companyId} = req.body;
+        const {name, role, companyId, designation, skills} = req.body;
 
         const user = await Member.findOne({companyId, memberId });
             if(!user)
@@ -94,7 +94,7 @@ export const updateMember = async (req, res) =>{
                     message : "User not found"
             })
             else{
-                const updatedUser = await Member.findOneAndUpdate({companyId : companyId, memberId}, {name, role});
+                const updatedUser = await Member.findOneAndUpdate({companyId : companyId, memberId}, {name, role, designation, skills});
                 return res.status(200).json({
                     success : true, 
                     message : "Update successful",
