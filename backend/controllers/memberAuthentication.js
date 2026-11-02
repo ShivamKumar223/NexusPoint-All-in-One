@@ -2,10 +2,10 @@ import jwt from "jsonwebtoken";
 
 import Member from "../models/member.js";
 
-const generateToken = ({name, companyId, memberId, role, designation, skills})=>{
+const generateToken = ({name, organizationId, _id : userId, memberId, role, designation, skills})=>{
     const token =  jwt.sign(
         {
-            name, companyId, memberId, role, designation, skills
+            name, organizationId, userId, memberId, role, designation, skills
         },
          process.env.JWT_SECRET,
          {
@@ -16,11 +16,13 @@ const generateToken = ({name, companyId, memberId, role, designation, skills})=>
     return token;
 }
 
+
+// login member
 export const loginMember = async (req, res)=>{
     try{
-        const { companyId, memberId, password } = req.body;
+        const { organizationId, memberId, password } = req.body;
 
-        const isUserExist = await Member.findOne({companyId, memberId});
+        const isUserExist = await Member.findOne({organizationId, memberId});
         if(!isUserExist)
         {
             return res.status(404).json({
@@ -28,7 +30,8 @@ export const loginMember = async (req, res)=>{
             })
         }
         else{
-            if(isUserExist.password === password)
+            const isPasswordCorrect = await bcrypt.compare(password, isUserExist.password);
+            if(isPasswordCorrect)
             {
                const token = generateToken(isUserExist);
                res.cookie("token", token, 
@@ -46,7 +49,7 @@ export const loginMember = async (req, res)=>{
             }
             else{
                 return res.status(401).json({
-                    message : "Wrong Id or password"
+                    message : "Invalid Id or password"
                 })
             }
         }

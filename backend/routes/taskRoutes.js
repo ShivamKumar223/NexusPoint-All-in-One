@@ -4,8 +4,8 @@ const router = express.Router();
 
 router.get("/", getTasks);
 router.post("/", createTask);
-router.patch("/:project/:module/:task", updateTask);
-router.get("/:project/:module/:task", getTask);
-router.patch("/:project/:module/:task", deleteTask);
+router.get("/:_id", getTask);
+router.patch("/:_id", updateTask);
+router.patch("/:_id", deleteTask);
 
 export default router;

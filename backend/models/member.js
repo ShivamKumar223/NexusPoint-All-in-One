@@ -6,15 +6,15 @@ const memberSchema = new mongoose.Schema(
             type : String,
             required : true
         },
-        companyId : {
+        organizationId : {
             type : mongoose.Schema.Types.ObjectId,
-            ref : "Admin",
+            ref : "Organization",
             required : true,
+            unique : true
         },
         memberId: {
             type: String,
             required: true,
-            unique: true,
             trim  : true
         },
         password: {

@@ -2,13 +2,14 @@ import mongoose from "mongoose";
 
 const teamSchema = new mongoose.Schema(
     {
-        companyId : {
+        organizationId : {
             type : mongoose.Schema.Types.ObjectId,
-            ref : "Admin",
+            ref : "Organization",
             required : true
         }, 
-        memberId : {
-            type : String,
+        projectManagerId : {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Member",
             required : true
         },
         teamName : {

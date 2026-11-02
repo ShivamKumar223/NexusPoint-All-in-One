@@ -1,19 +1,19 @@
 import mongoose from "mongoose";
 
-const adminSchema = new mongoose.Schema({
-    name: {
-        type: String,
+const organizationSchema = new mongoose.Schema({
+    organizationName : {
+        type: String, 
         required: true,
         trim : true
     },
-    company : {
-        type: String, 
+    ownerName: {
+        type: String,
         required: true,
         trim : true
     },
     role: {
         type: String,
-        default: "admin",
+        default: "masterAdmin",
         immutable : true
     },
     email: {
@@ -33,7 +33,7 @@ const adminSchema = new mongoose.Schema({
 }
 );
 
-const Admin = mongoose.model("Admin", adminSchema);
+const Organization = mongoose.model("Organization", organizationSchema);
 
-export default Admin;
+export default Organization;
 

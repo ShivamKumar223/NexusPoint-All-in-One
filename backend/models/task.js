@@ -15,15 +15,11 @@ const taskSchema = new mongoose.Schema(
             type : String,
             required : true
         },
-        members : {
-            type : [
-                {
+        memberId : {
                     type : mongoose.Schema.Types.ObjectId,
-                    ref : "Member"
+                    ref : "Member",
+                    required : true
                 }
-            ],
-            required : true
-        }
     },
     {
         timestamps : true
