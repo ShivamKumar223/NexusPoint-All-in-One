@@ -46,14 +46,16 @@ const projectSchema = new mongoose.Schema(
 
     status: {
       type: String,
+      required: true,
       enum: [
         "pending",
         "inprogress",
         "review",
-        "complete"
+        "complete",
+        "archive"
       ],
       default: "pending"
-    }
+    },
   },
   {
     timestamps: true

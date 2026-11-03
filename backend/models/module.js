@@ -41,7 +41,8 @@ const moduleSchema = new mongoose.Schema(
                 "pending",
                 "inprogress",
                 "review",
-                "complete"
+                "complete",
+                "archive"
             ],
             default : "pending"
         }

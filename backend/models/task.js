@@ -9,18 +9,39 @@ const taskSchema = new mongoose.Schema(
         taskName : {
             type : String,
             required : true,
-            tre
         },
         description : {
             type : String,
             required : true
         },
-        memberId : {
+        members : [{
                     type : mongoose.Schema.Types.ObjectId,
                     ref : "Member",
                     required : true
-                }
+        }],
+        startFrom : {
+            type : Date,
+            required : true,
+            default :Date.now,
+        },
+        completeBy : {
+            type : Date,
+            required : true
+        },
+         status : {
+            type : String,
+            required : true,
+            enum : [
+                "pending",
+                "inprogress",
+                "review",
+                "complete",
+                "archive"
+            ],
+            default : "pending"
+        }
     },
+
     {
         timestamps : true
     }
