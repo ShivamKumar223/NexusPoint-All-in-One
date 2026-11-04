@@ -6,30 +6,31 @@ import Project from "../models/project.js";
 
 // Show profile of the user(Admin)
 export const getProfile = async (req, res) =>{
-    const { organizationId, userId, role} = req.user;
-     if(role != "admin")
+    const {memberId, role:roleIs} = req.user;
+     if(roleIs != "admin")
         {
-            return res.status().json(
+            return res.status(403).json(
                 {
-                    message : "You are not authorized",
+                    success : true,
+                    message : "You are not authorized to access this resource",
                 }
             )
         }
 
     try{
-        const id = userId || organizationId;
-        const user = await Organization.findOne({ id }, { password : 0 });
-        
+        const user = await Organization.findOne({ _id: memberId }, { password : 0 });      
         if(!user)
         {
             return res.status(404).json({
+                success : false,
                 message : "User not found"
             })
         }
         else{
             return res.status(200).json({
                 success : true,
-                user
+                message : "Success",
+                data : user
             })
         }
     }
@@ -43,52 +44,54 @@ export const getProfile = async (req, res) =>{
 }
 
 // Update profile of the user(Admin)
-export const updateProfile = async (req, res) =>{
-    const { organizationId, userId, role} = req.user;
-     if(role != "admin")
-        {
-            return res.status().json(
-                {
-                    message : "You are not authorized",
-                }
-            )
-        }
+// export const updateProfile = async (req, res) =>{
+//     const { _id:memberId, role:roleIs} = req.user;
+//      if(roleIs != "admin")
+//         {
+//             return res.status(403).json(
+//                 {
+//                     success : true,
+//                     message : "You are not authorized to access this resource",
+//                 }
+//             )
+//         }
 
-    try{
-        const id = userId || organizationId;
-        const user = await Organization.findOne({ id }, { password : 0 });
+//     try{
+//         const user = await Organization.findOne({ id }, { password : 0 });
         
-        if(!user)
-        {
-            return res.status(404).json({
-                message : "User not found"
-            })
-        }
-        else{
-            return res.status(200).json({
-                success : true,
-                user
-            })
-        }
-    }
-    catch(error)
-    {
-        return res.status(500).json({
-            success : false,
-            message : "Request failed"
-        })
-    }
-}
+//         if(!user)
+//         {
+//             return res.status(404).json({
+//                 message : "User not found"
+//             })
+//         }
+//         else{
+//             return res.status(200).json({
+//                 success : true,
+//                 user
+//             })
+//         }
+//     }
+//     catch(error)
+//     {
+//         return res.status(500).json({
+//             success : false,
+//             message : "Request failed"
+//         })
+//     }
+// }
+
 
 // Create a new member in the organization
 export const createMember = async (req, res) =>{
     const {name, role, memberId, password, designation, skills} = req.body;
-    const {organizationId, role : adminRole} = req.user;
-    if(adminRole != "admin")
+    const {_id : organizationId, role : roleIs} = req.user;
+    if(roleIs != "admin")
         {
-            return res.status().json(
+            return res.status(403).json(
                 {
-                    message : "You are not authorized",
+                    success : true,
+                    message : "You are not authorized to access this resource",
                 }
             )
         }
@@ -99,6 +102,7 @@ export const createMember = async (req, res) =>{
     if(isExistUser)
     {
         return res.status(409).json({
+            success : false,
             message : "User already exist"
         })
     }
@@ -117,7 +121,7 @@ export const createMember = async (req, res) =>{
         res.status(200).json({
             success : true, 
             message : "Member's log created",
-            user                                        //temperory
+            data : user                                        //temperory
         })
     }
 
@@ -134,23 +138,25 @@ export const createMember = async (req, res) =>{
 
 // Extract all members of an organization
 export const getMembers = async (req, res) => {
-        const { organizationId, role } = req.user;
-        if(role != "admin")
+        const {memberId, organizationId, role: roleIs } = req.user;
+      if(roleIs != "admin")
         {
-            return res.status().json(
+            return res.status(403).json(
                 {
-                    message : "You are not authorized",
+                    success : true,
+                    message : "You are not authorized to access this resource",
                 }
             )
         }
 
     try {      
 
-        let members = await Member.find({ organizationId }, {password : 0});
+        const members = await Member.find({ organizationId }, {password : 0});
 
         return res.status(200).json({
             success: true,
-            members
+            message : "Success",
+            data : members
         });
 
     } catch (error) {
@@ -164,32 +170,34 @@ export const getMembers = async (req, res) => {
 
 // Update the existing member profile mejority role
 export const updateMember = async (req, res) =>{
-    const Id = req.params._id;
+    const { memberId } = req.params;
     const { name, role, designation, skills } = req.body;
-    const { role : adminRole} = req.user;
-    if(adminRole != "admin")
+    const {organizationId, role : roleIs} = req.user;
+    if(roleIs != "admin" || role == "admin" || role != "master-admin")
         {
-            return res.status().json(
+            return res.status(403).json(
                 {
-                    message : "You are not authorized",
+                    success : true,
+                    message : "You are not authorized to access this resource",
                 }
             )
         }
 
     try{
-        const user = await Member.findOne({ Id });
-            if(!user)
-                return res.status(404).json({
-                    message : "User not found"
-            })
-            else{
                 const updatedUser = await Member.findOneAndUpdate({ Id }, {name, role, designation, skills});
+                if(!updatedUser)
+                {
+                    return res.status(404).json({
+                        success : false,
+                        message : "User not found yet"
+                    })
+                }
                 return res.status(200).json({
                     success : true, 
                     message : "Update successful",
                     updatedUser
                 })
-            }
+            
     }
     catch(error){
         return res.status(500).json({
@@ -203,22 +211,33 @@ export const updateMember = async (req, res) =>{
 // Delete existin member from organization
 export const deleteMember = async (req, res) =>{
     try{
-        const Id  = req.params._id;
+        const {memberId}  = req.params;
+        const { organizationId, _id: userId} = req.user;
+        if(role != "admin")
+        {
+            return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+        }
 
-
-        const user = await Member.findOne({ Id });
-        if(!user)
+        const deletedUser = await Member.findOneAndDelete({ organizationId, memberId });
+        if(!deletedUser)
         {
             return res.status(404).json({
-                message : "User not found"
+                success : false,
+                message : "User not found",
             })
         }
         else{
-            const deletedMember = await Member.findOneAndDelete({ Id });
+            const deletedMember = await Member.findOneAndDelete({ memberId });
             return res.status(200).json({
                 success : true,
                 message : "Delete member successfully",
-                deletedMember
+                data : deletedUser
+
             })
         }
     }
@@ -240,14 +259,16 @@ export const getAllTeams = async (req, res) => {
     try{
         if(role !== "admin") {
             return res.status(403).json({
+                success : false,
                 message: "You are not authorized to access this resource",
             });
         }
         if(!organizationId){
-            return res.status(400)
+            return res.status(400).json(
             {
+                success : false,
                 message : "please provide organization Id"
-            }
+            })
         }
 
         const teams = await Team.find({ organizationId });

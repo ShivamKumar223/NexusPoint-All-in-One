@@ -13,7 +13,7 @@ const organizationSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "masterAdmin",
+        default: "master-Admin",
         immutable : true
     },
     email: {

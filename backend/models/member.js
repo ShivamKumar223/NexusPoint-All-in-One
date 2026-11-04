@@ -10,7 +10,6 @@ const memberSchema = new mongoose.Schema(
             type : mongoose.Schema.Types.ObjectId,
             ref : "Organization",
             required : true,
-            unique : true
         },
         memberId: {
             type: String,

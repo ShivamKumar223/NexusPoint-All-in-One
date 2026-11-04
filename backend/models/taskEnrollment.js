@@ -12,7 +12,7 @@ const taskEnrollmentSchema = new mongoose.Schema({
     }],
 },
 {
-   timestamps : true,
+   timestamps : true
 }
 );
 

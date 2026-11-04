@@ -2,6 +2,34 @@ import Module from "../models/module";
 import Project from "../models/project";
 import Team from "../models/team";
 
+// Get profile of Project Manager
+export const  getProfile = async (req, res) =>{
+    try{
+        const { userId } = req.user;
+
+        const user = await Member.findOne({ userId });
+        if(!user)
+            {
+                return res.status(404).json({
+                    message : "User not exist"
+                })
+            }
+            else{
+            const { password, ...userWithoutPassword } = user;
+            return res.status(200).json({
+                success : true,
+                data : userWithoutPassword
+            })
+        }
+    }
+    catch(error)
+    {
+        return res.status(500).json({
+            success : false,
+            message : "Request failed"
+        })
+    }
+}
 
 // Create new team in an organization
 export const createTeam = async (req, res) => {
@@ -11,13 +39,15 @@ export const createTeam = async (req, res) => {
 
     if(!role || !organizationId || !_id){
         return res.status(400).json({
+            success : false,
             message : "please provide role, organization Id and user Id"
         })
     }
     if(role !== "project-manager") {
         return res.status(403).json({
-            message: "You are not authorized to access this resource",
-        });
+        success: false,
+         message: "You are not authorized to access this resource",
+      });
     }
 
     const { teamName, description, members} = req.body;
@@ -36,13 +66,14 @@ export const createTeam = async (req, res) => {
         })
     }
     else{
-        return res.status(200).json({
+        return res.status(201).json({
             success : true,
-            team
+            message : "Team created successfully",
+            data : team
         })
     }}
     catch(error){
-    return res.status().json({
+    return res.status(500).json({
         success: false,
         message: "Failed to create team"
     })}
@@ -52,12 +83,22 @@ export const createTeam = async (req, res) => {
 // Update the existing team of a organization
 export const updateTeam = async (req, res)=>{
     try{
-        const teamId = req.params._id;
+        const { role } = req.user;
+        if(role != "project-manager")
+        {
+            return res.status(403).json({
+            success: false,
+             message: "You are not authorized to access this resource",
+      });
+        }
+        const {teamId} = req.params;
         if(!teamId){
             return res.status(400).json({
+                success : false,
                 message : "please provide team Id"
             })
         }
+        
         const team = await Team.findById({_id:teamId});
         if(!team){
             return res.json(404).json({
@@ -75,16 +116,16 @@ export const updateTeam = async (req, res)=>{
             })
         }
         else{
-            return res.status(200).json({
+            return res.status(201).json({
                 success : true,
                 message : "Team updated successfully",
-                updatedTeam
+                data: updatedTeam
             })
         }
     }
     catch(error)
     {
-        return res.status().json({
+        return res.status(500).json({
             success : true,
             message : "Failed to update team"
         })
@@ -95,7 +136,7 @@ export const updateTeam = async (req, res)=>{
 // Delete existion team
 export const deleteTeam = async (req, res)=>{
     try{
-        const teamId = req.params._id;
+        const {teamId} = req.params;
         const {role} = req.user;
         if(!teamId || !role){
             return res.status(400).json({
@@ -110,17 +151,18 @@ export const deleteTeam = async (req, res)=>{
                 message: "You are not authorized to access this resource",
             })
         }
-        const team = await Team.findById({_id: teamId});
-        if(!team){
+        const deletedTeam = await Team.findByIdAndDelete({_id: teamId});
+        if(!deletedTeam){
             return res.status(404).json({
                 success : false,
                 message : "Team not found"
             })
         }
         else{
-            return res.status(200).json({
+            return res.status(204).json({
                 success : true,
-                message : "Team deleted successfully"
+                message : "Team deleted successfully",
+                data : deletedTeam
             })
         }
     }
@@ -146,6 +188,7 @@ export const getAllTeams = async (req, res)=>{
 
         if(role !== "project-manager") {
             return res.status(403).json({
+                success : false,
                 message: "You are not authorized to access this resource",
             });
         }
@@ -160,7 +203,7 @@ export const getAllTeams = async (req, res)=>{
         return res.status(200).json({
             success : true,
             message: "Teams fetched successfully",
-            teams
+            data : teams
         });
     }
     catch(error)
@@ -173,9 +216,9 @@ export const getAllTeams = async (req, res)=>{
 }
 
 // Extract detail of a existing team
-export const teamById = async (req, res) =>{
+export const getTeamById = async (req, res) =>{
     try{
-        const teamId = req.params._id;
+        const {teamId} = req.params;
         const { role } = req.user;
 
         if(!teamId || !role){
@@ -184,10 +227,12 @@ export const teamById = async (req, res) =>{
             })
         }
 
-        if(role !== "project-manager") {
+        if(role != "project-manager")
+        {
             return res.status(403).json({
+                success : false,
                 message: "You are not authorized to access this resource",
-            });
+            })
         }
 
         const team = await Team.findById({_id: teamId});
@@ -200,7 +245,7 @@ export const teamById = async (req, res) =>{
         return res.status(200).json({
             success : true,
             message : "Team fetched successfully",
-            team
+            data : team
         })
     }
     catch(error)
@@ -250,10 +295,10 @@ export const createProject = async (req, res) => {
                 message : "Failed to create project"
             })
         }
-        return res.status(200).json({
+        return res.status(201).json({
             success : true,
             message : "Project created successfully",
-            project
+            data : project
         })
     }
     catch(error){
@@ -267,7 +312,7 @@ export const createProject = async (req, res) => {
 // Update the existing project of a organization
 export const updateProject = async (req, res)=>{
     try{
-        const projectId = req.params._id;
+        const {projectId} = req.params;
         const { role } = req.user;
         if(role != "project-manager")
         {
@@ -294,10 +339,10 @@ export const updateProject = async (req, res)=>{
             })
         }
         else{
-            return res.status(200).json({
+            return res.status(201).json({
                 success : true,
                 message : "Project updated successfully",
-                updatedProject
+                data : updatedProject
             })
         }
     }
@@ -328,10 +373,10 @@ export const deleteProject = async (req, res)=>{
                     message : "Project not found"
                 })
             }else{
-            return res.status(200).json({
+            return res.status(204).json({
                 success : true,
                 message : "Project deleted successfully",
-                deletedProject
+                data : deletedProject
             })
         }
         }
@@ -378,7 +423,7 @@ export const getAllProjects = async (req, res)=>{
         return res.status(200).json({
             success : true,
             message: "Projects fetched successfully",
-            projects
+            data : projects
         });
     }
     catch(error)
@@ -391,9 +436,9 @@ export const getAllProjects = async (req, res)=>{
 }
 
 // Extaract detail of a existing project
-export const projectById = async (req, res) =>{
+export const getProjectById = async (req, res) =>{
     try{
-        const projectId = req.params._id;
+        const {projectId} = req.params;
         const { role } = req.user;
         if(role != "project-manager")
         {
@@ -418,7 +463,7 @@ export const projectById = async (req, res) =>{
         return res.status(200).json({
             success : true,
             message : "Project fetched successfully",
-            project
+            data : project
         })
 
 
@@ -436,7 +481,7 @@ export const projectById = async (req, res) =>{
 export const createModule = async (req, res) => {
     try{
         const { organizationId, role, _id } = req.user;
-        const { projectId } = req.params.projectId;
+        const { projectId } = req.params;
         const { moduleName, description, teams, startFrom, completeBy, status } = req.body;
 
         if(!organizationId || !role || !_id){
@@ -461,7 +506,7 @@ export const createModule = async (req, res) => {
         const module = await Module.findById({_id: projectId, moduleName});
         if(module)
         {
-            return res.status().json({
+            return res.status(400).json({
                 success : true,
                 message : "The Module already exist"
             })
@@ -475,10 +520,10 @@ export const createModule = async (req, res) => {
             })
         }
         else{
-            return res.status(200).json({
+            return res.status(201).json({
                 success : true,
                 message : "Module created successfully",
-                newModule
+                data : newModule
             })
         }
         
@@ -520,10 +565,10 @@ export const updateModule = async (req, res) =>{
             })
         }
 
-        return res.status(200).json({
+        return res.status(201).json({
             success : true,
             message : "Module updated successfully",
-            updatedModule  
+            data : updatedModule  
         })
 
     }
@@ -540,17 +585,17 @@ export const updateModule = async (req, res) =>{
 export const deleteModule = async (req, res) =>{
     try{
         const moduleId = req.params.moduleId;
-        const { _id } = req.user;
+        const { _id:memberId, role } = req.user;
         if(!moduleId)
         {
-            return res.status().json({
+            return res.status(400).json({
                 success : false,
                 message : "Please provide moduleId"
             })
         }
-        if(! _id )
+        if(! memberId )
         {
-            return res.status().json({
+            return res.status(400).json({
                 success : false,
                 message : "Please provide createrId"
             })
@@ -569,10 +614,10 @@ export const deleteModule = async (req, res) =>{
                 message : "Module not found"
             })
         }
-        return res.status(200).json({
+        return res.status(204).json({
             success : true,
             message : "Module deleted successfully",
-            deletedModule
+            data : deletedModule
         })
     }
     catch(error){
@@ -611,7 +656,7 @@ export const getAllModulesByProjectId = async (req, res) =>{
         return res.status(200).json({
             success : true,
             message: "Modules fetched successfully",
-            modules
+            data : modules
         });
     }
     catch(error){

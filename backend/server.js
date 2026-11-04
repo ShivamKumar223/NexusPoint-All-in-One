@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
 import adminRoutes from "./routes/adminRoutes.js";
-import memberRoutes from "./routes/memberRoutes.js";
-import connectMongoDB from "./config/db.js";
+import pmRoutes from "./routes/projectManagerRoutes.js"
+import tmownerRoutes from "./routes/teamOwnerRoutes.js"
+import employeeRoutes from "./routes/employeeRoutes.js"
 
 dotenv.config();
 
@@ -23,7 +24,9 @@ app.get('/', (req, res) => {
 await connectMongoDB();               //database connection
 
 app.use("/api/admins", adminRoutes);
-app.use("/api/members", memberRoutes);
+app.use("/api/project-manager", pmRoutes);
+app.use("/api/team-owner", tmownerRoutes);
+app.use("/api/employee", employeeRoutes);
 
 const PORT = process.env.PORT || 7000;
 

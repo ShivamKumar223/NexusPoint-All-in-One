@@ -3,15 +3,45 @@
 import Module from "../models/module";
 import ModuleEnrollment from "../models/moduleEnrollment";
 
+// Get profile of Project Manager
+export const  getProfile = async (req, res) =>{
+    try{
+        const { userId } = req.user;
+
+        const user = await Member.findOne({ userId });
+        if(!user)
+            {
+                return res.status(404).json({
+                    message : "User not exist"
+                })
+            }
+            else{
+            const { password, ...userWithoutPassword } = user;
+            return res.status(200).json({
+                success : true,
+                data : userWithoutPassword
+            })
+        }
+    }
+    catch(error)
+    {
+        return res.status(500).json({
+            success : true,
+            message : "Request failed"
+        })
+    }
+}
+
+
 // Extract all Modules associated with a team owner
-export const getAllModule = async (req, res)=>{
+export const getMyModules = async (req, res)=>{
     try{
         const { role, _id:memberId } = req.user;
         if(!role || !memberId)
         {
-            return res.status().json({
+            return res.status(400).json({
                 success : false,
-                message : "Please provide role and memberId";
+                message : "Please provide role and memberId"
             }) 
         }
         if(role !== "team-owner")
@@ -24,15 +54,16 @@ export const getAllModule = async (req, res)=>{
         const modules = await ModuleEnrollment.find({memberId});
         if(!modules)
         {
-            return res.status().json({
+            return res.status(204).json({
                 success : false,
                 message : "Module not found yet"
             })
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success : true,
-            message : "Success"
+            message : "Success",
+            data : modules
         })
 
     }
@@ -50,7 +81,8 @@ export const getAllModule = async (req, res)=>{
 export const createTask = async (req, res) => {
     try {
         const { role } = req.user;
-        const { moduleId, taskName, description, members, startFrom, completeBy } = req.body;
+        const { moduleId } = req.params;
+        const { taskName, description, members, startFrom, completeBy } = req.body;
         if (role !== "team-owner") {
             return res.status(403).json({
                 success: false,
@@ -126,7 +158,7 @@ export const updateTask = async (req, res) => {
                 message: "Task update failed."
             });
         }
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: "Task updated successfully.",
             data: updatedTask
@@ -166,7 +198,7 @@ export const deleteTask = async (req, res) => {
                 message: "Task deletion failed."
             });
         }
-        return res.status(200).json({
+        return res.status(204).json({
             success: true,
             message: "Task deleted successfully.",
             data: deletedTask
@@ -182,10 +214,10 @@ export const deleteTask = async (req, res) => {
 }
 
 // Get all tasks
-export const getAllTasks = async (req, res) => {
+export const getAllTasksByModoleId = async (req, res) => {
     try {
         const { role } = req.user;
-        const { moduleId } = req.query;
+        const { moduleId } = req.params;
         if (role !== "team-owner") {
             return res.status(403).json({
                 success: false,
@@ -228,7 +260,7 @@ export const getMyTeams = async (req, res) => {
         if (role !== "developer" && role !== "team-owner") {
             return res.status(403).json({
                 success: false,
-                message: "Access denied. Only developers can view their teams."
+                message: "Access denied. Only Team Owners can view their teams."
             });
         }
         if (!memberId) {
@@ -247,7 +279,7 @@ export const getMyTeams = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Team retrieved successfully.",
-            team
+            data : team
         });
     }
     catch (error) {
@@ -266,7 +298,7 @@ export const updateModuleStatus = async (req, res) => {
         const { moduleId } = req.params;
         const { newStatus } = req.body;
         if (!role || !memberId || !moduleId || !newStatus) {
-            return res.status().json({
+            return res.status(400).json({
                 success: false,
                 message: "Please provide role, memberId, ModuleId and new status"
             })
@@ -287,7 +319,8 @@ export const updateModuleStatus = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "Status updated successfully"
+            message: "Status updated successfully",
+            data : updatedModule
         })
     }
     catch (error) {
