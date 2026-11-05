@@ -2,38 +2,35 @@ import mongoose from "mongoose";
 
 const teamSchema = new mongoose.Schema(
     {
-        organizationId : {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : "Organization",
-            required : true
-        }, 
-        projectManagerId : {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : "Member",
-            required : true
+        organizationId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Organization",
+            required: true
         },
-        teamName : {
-            type : String,
-            required : true,
-            trim : true
+        projectManagerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Member",
+            required: true
         },
-        description : {
+        teamName: {
             type: String,
-            required : true,
-            trim : true
+            required: true,
+            trim: true
         },
-        members : {
-            type : [
-                {
-                    type : mongoose.Schema.Types.ObjectId,
-                    ref  : "Member"
-                }
-            ],
-            required : true
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        members: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "Member",
+            required: true,
+            unique: true
         },
     },
     {
-        timestamps : true
+        timestamps: true
     }
 )
 

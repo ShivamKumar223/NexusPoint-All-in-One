@@ -5,10 +5,11 @@ const teamEnrollmentSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : "Member"
     },
-    teamId : [{
-        type : mongoose.Schema.Types.ObjectId,  
+    teams :{
+        type : [mongoose.Schema.Types.ObjectId],  
         ref : "Team",
-    }]
+        unique : true,  //Note : 👈 Ensures duplicate Member IDs cannot be added to this array
+    }
 },
 {
     timestamps : true,

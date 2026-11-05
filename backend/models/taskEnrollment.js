@@ -6,10 +6,10 @@ const taskEnrollmentSchema = new mongoose.Schema({
         ref : "Member",
         unique : true,
 },
-    taskId : [{
-        type : mongoose.Schema.Types.ObjectId,  
+    tasks :{
+        type : [mongoose.Schema.Types.ObjectId],  
         ref : "Task",
-    }],
+    },
 },
 {
    timestamps : true

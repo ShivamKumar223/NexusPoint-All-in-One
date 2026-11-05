@@ -27,12 +27,12 @@ const projectSchema = new mongoose.Schema(
       trim: true
     },
 
-    teams: [
+    teams: 
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Team"
-      }
-    ],
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Team",              
+        unique: true,
+      },
 
     startFrom: {
       type: Date,

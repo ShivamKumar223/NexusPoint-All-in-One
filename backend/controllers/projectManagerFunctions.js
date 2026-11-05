@@ -1,258 +1,279 @@
-import Module from "../models/module";
-import Project from "../models/project";
-import Team from "../models/team";
+import Member from "../models/member.js";
+import Module from "../models/module.js";
+import Project from "../models/project.js";
+import Team from "../models/team.js";
+import TeamEnrollment from "../models/teamEnrollment.js";
 
 // Get profile of Project Manager
-export const  getProfile = async (req, res) =>{
-    try{
-        const { userId } = req.user;
-
-        const user = await Member.findOne({ userId });
-        if(!user)
+export const getProfile = async (req, res) => {
+    const { organizationId, memberId, role: roleIs } = req.user;
+    // console.log(req.user);
+    if (roleIs != "project-manager") {
+        return res.status(403).json(
             {
-                return res.status(404).json({
-                    message : "User not exist"
-                })
+                success: true,
+                message: "You are not authorized to access this resource",
             }
-            else{
-            const { password, ...userWithoutPassword } = user;
+        )
+    }
+
+    try {
+        const user = await Member.findOne({ organizationId, memberId }, { password: 0 });
+        //console.log(user.id, typeof user.id); // This is completely correct: access as a string 
+        //console.log(user._id, typeof user._id); // This is completely correct: access as a object 
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+        else {
             return res.status(200).json({
-                success : true,
-                data : userWithoutPassword
+                success: true,
+                message: "Success",
+                data: user
             })
         }
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Request failed"
+            success: false,
+            message: "Login failed due to server side error"
         })
     }
 }
 
 // Create new team in an organization
 export const createTeam = async (req, res) => {
-    
-    try{
-    const { organizationId, role, _id } = req.user;
 
-    if(!role || !organizationId || !_id){
-        return res.status(400).json({
-            success : false,
-            message : "please provide role, organization Id and user Id"
-        })
+    try {
+        const { organizationId, role, id } = req.user;
+
+        if (!role || !organizationId || ! id) {
+            return res.status(400).json({
+                success: false,
+                message: "please provide role, organization Id and user Id"
+            })
+        }
+        if (role !== "project-manager") {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to access this resource",
+            });
+        }
+
+        const { teamName, description, members } = req.body;
+        const team = await Team.create({
+            organizationId,
+            projectManagerId: id,
+            teamName,
+            description,
+            members
+        });
+
+        if (!team) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to create team"
+            })
+        }
+        else {
+
+            // add the teamId in every member which is member of this team
+            const {members, id: teamId} = team;
+            for(const member of members)
+            {
+                TeamEnrollment.findByIdAndUpdate(id, {$push: {teams: teamId}});
+            }
+
+            return res.status(201).json({
+                success: true,
+                message: "Team created successfully",
+                data: team
+            })
+        }
     }
-    if(role !== "project-manager") {
-        return res.status(403).json({
-        success: false,
-         message: "You are not authorized to access this resource",
-      });
-    }
-
-    const { teamName, description, members} = req.body;
-    const team = await Team.create({
-        organizationId,
-        projectManagerId: _id,
-        teamName,
-        description,
-        members
-    });
-
-    if(!team){
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to create team"
+            success: false,
+            message: "Failed to create team"
         })
     }
-    else{
-        return res.status(201).json({
-            success : true,
-            message : "Team created successfully",
-            data : team
-        })
-    }}
-    catch(error){
-    return res.status(500).json({
-        success: false,
-        message: "Failed to create team"
-    })}
 }
 
 
 // Update the existing team of a organization
-export const updateTeam = async (req, res)=>{
-    try{
+export const updateTeam = async (req, res) => {
+    try {
         const { role } = req.user;
-        if(role != "project-manager")
-        {
+        const { teamName, description, members } = req.body;
+
+        if (role != "project-manager") {
             return res.status(403).json({
-            success: false,
-             message: "You are not authorized to access this resource",
-      });
+                success: false,
+                message: "You are not authorized to access this resource",
+            });
         }
-        const {teamId} = req.params;
-        if(!teamId){
+        const { teamId } = req.params;
+        if (!teamId) {
             return res.status(400).json({
-                success : false,
-                message : "please provide team Id"
+                success: false,
+                message: "please provide team Id"
             })
         }
-        
-        const team = await Team.findById({_id:teamId});
-        if(!team){
+
+        const team = await Team.findById( teamId );
+        if (!team) {
             return res.json(404).json({
-                success : false,
-                message : "Team doesn't exist"
+                success: false,
+                message: "Team doesn't exist"
             })
         }
-        const {teamName, description, members} = req.body;
-        const updatedTeam = await Team.findByIdAndUpdate({_id:teamId}, {teamName, description, members})
-        if(!updatedTeam)
-        {
+        const updatedTeam = await Team.findByIdAndUpdate({ id: teamId }, { teamName, description, members })
+        if (!updatedTeam) {
             return res.status().json({
-                success : false,
-                message : "Team doesn't updated yet"
+                success: false,
+                message: "Team doesn't updated yet"
             })
         }
-        else{
+        else {
             return res.status(201).json({
-                success : true,
-                message : "Team updated successfully",
+                success: true,
+                message: "Team updated successfully",
                 data: updatedTeam
             })
         }
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : true,
-            message : "Failed to update team"
+            success: true,
+            message: "Failed to update team"
         })
     }
 }
 
 
 // Delete existion team
-export const deleteTeam = async (req, res)=>{
-    try{
-        const {teamId} = req.params;
-        const {role} = req.user;
-        if(!teamId || !role){
+export const deleteTeam = async (req, res) => {
+    try {
+        const { teamId } = req.params;
+        const { role } = req.user;
+        if (!teamId || !role) {
             return res.status(400).json({
-                message : "please provide team Id and role"
+                message: "please provide team Id and role"
             })
         }
 
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        const deletedTeam = await Team.findByIdAndDelete({_id: teamId});
-        if(!deletedTeam){
+        const deletedTeam = await Team.findByIdAndDelete({ id: teamId });
+        if (!deletedTeam) {
             return res.status(404).json({
-                success : false,
-                message : "Team not found"
+                success: false,
+                message: "Team not found"
             })
         }
-        else{
+        else {
+            // Remove the teamId(team) from all team members
+            const { members, id:teamId } = deletedTeam;
+            for(const member of members)
+            {
+                TeamEnrollment.findByIdAndUpdate(id, {$pull: {teams: teamId}});
+            }
             return res.status(204).json({
-                success : true,
-                message : "Team deleted successfully",
-                data : deletedTeam
+                success: true,
+                message: "Team deleted successfully",
+                data: deletedTeam
             })
         }
     }
-    catch(error)
-    {
+    catch (error) {
         res.status().json({
-            success : false,
-            message : "Team doesn't delete yet"
+            success: false,
+            message: "Team doesn't delete yet"
         })
     }
 }
 
 // Extract all existing teams of an organization
-export const getAllTeams = async (req, res)=>{
-    try{
-        const { organizationId, _id, role } = req.user;
+export const getAllTeams = async (req, res) => {
+    try {
+        const { organizationId, id, role } = req.user;
 
-        if(!organizationId || !_id || !role){
+        if (!organizationId || !id || !role) {
             return res.status(400).json({
-                message : "please provide organization Id, user Id and role"
+                message: "please provide organization Id, user Id and role"
             })
         }
 
-        if(role !== "project-manager") {
+        if (role !== "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             });
         }
 
-        const teams = await Team.find({ organizationId, projectManagerId: _id });
-        if(!teams || teams.length === 0){
+        const teams = await Team.find({ organizationId, projectManagerId: id });
+        if (!teams || teams.length === 0) {
             return res.status(404).json({
-                success : false,
+                success: false,
                 message: "Teams not found",
             });
         }
         return res.status(200).json({
-            success : true,
+            success: true,
             message: "Teams fetched successfully",
-            data : teams
+            data: teams
         });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to fetch teams"
+            success: false,
+            message: "Failed to fetch teams"
         })
     }
 }
 
 // Extract detail of a existing team
-export const getTeamById = async (req, res) =>{
-    try{
-        const {teamId} = req.params;
+export const getTeamById = async (req, res) => {
+    try {
+        const { teamId } = req.params;
         const { role } = req.user;
 
-        if(!teamId || !role){
+        if (!teamId || !role) {
             return res.status(400).json({
-                message : "please provide team Id and role"
+                message: "please provide team Id and role"
             })
         }
 
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
 
-        const team = await Team.findById({_id: teamId});
-        if(!team){
+        const team = await Team.findById({ id: teamId });
+        if (!team) {
             return res.status(404).json({
-                success : false,
-                message : "Team not found"
+                success: false,
+                message: "Team not found"
             })
         }
         return res.status(200).json({
-            success : true,
-            message : "Team fetched successfully",
-            data : team
+            success: true,
+            message: "Team fetched successfully",
+            data: team
         })
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to fetch team"
+            success: false,
+            message: "Failed to fetch team"
         })
     }
 }
@@ -260,27 +281,26 @@ export const getTeamById = async (req, res) =>{
 
 // Create new project in an organization
 export const createProject = async (req, res) => {
-    try{
-        const { organizationId, role, _id } = req.user;
+    try {
+        const { organizationId, role, id } = req.user;
 
-        if(!organizationId || !role || !_id){
+        if (!organizationId || !role || ! id) {
             return res.status(400).json({
-                message : "please provide organization Id, role and user Id"
+                message: "please provide organization Id, role and user Id"
             })
         }
 
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
 
         const { projectName, description, teams, startFrom, completeBy, status } = req.body;
-        const project = await Project.create({
+        const newProject = await Project.create({
             organizationId,
-            projectManagerId: _id,
+            projectManagerId: id,
             projectName,
             description,
             teams,
@@ -288,190 +308,181 @@ export const createProject = async (req, res) => {
             completeBy,
             status
         });
-        if(!project)
-        {
+        if (!newProject) {
             return res.status(400).json({
-                success : false,
-                message : "Failed to create project"
+                success: false,
+                message: "Failed to create project"
             })
         }
+        
         return res.status(201).json({
-            success : true,
-            message : "Project created successfully",
-            data : project
+            success: true,
+            message: "Project created successfully",
+            data: newProject
         })
     }
-    catch(error){
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to create project"
+            success: false,
+            message: "Failed to create project"
         })
     }
 }
 
 // Update the existing project of a organization
-export const updateProject = async (req, res)=>{
-    try{
-        const {projectId} = req.params;
+export const updateProject = async (req, res) => {
+    try {
+        const { projectId } = req.params;
         const { role } = req.user;
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
         const { projectName, description, teams, startFrom, completeBy, status } = req.body;
-        const updatedProject = await Project.findByIdAndUpdate({_id:projectId}, 
+        const updatedProject = await Project.findByIdAndUpdate({ id: projectId },
             {
                 projectName,
-                description, 
-                teams, 
-                startFrom, 
-                completeBy, 
+                description,
+                teams,
+                startFrom,
+                completeBy,
                 status
             })
-        if(!updatedProject)
-        {
+        if (!updatedProject) {
             return res.status(400).json({
-                success : false,
-                message : "Failed to update project"
+                success: false,
+                message: "Failed to update project"
             })
         }
-        else{
+        else {
             return res.status(201).json({
-                success : true,
-                message : "Project updated successfully",
-                data : updatedProject
+                success: true,
+                message: "Project updated successfully",
+                data: updatedProject
             })
         }
     }
-    catch(error){
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to update project"
+            success: false,
+            message: "Failed to update project"
         })
     }
 }
 
 // Delete existion project
-export const deleteProject = async (req, res)=>{
-    try{
-        const projectId = req.params._id;
+export const deleteProject = async (req, res) => {
+    try {
+        const projectId = req.params.projectId;
         const { role } = req.user;
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-            const deletedProject = await Project.findByIdAndDelete({_id: projectId});
-            if(!deletedProject){
-                return res.status(404).json({
-                    success : false,
-                    message : "Project not found"
-                })
-            }else{
+        const deletedProject = await Project.findByIdAndDelete( projectId );
+        if (!deletedProject) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            })
+        } else {
             return res.status(204).json({
-                success : true,
-                message : "Project deleted successfully",
-                data : deletedProject
+                success: true,
+                message: "Project deleted successfully",
+                data: deletedProject
             })
         }
-        }
-          
-    catch(error){
+    }
+
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to delete project"
+            success: false,
+            message: "Failed to delete project"
         })
     }
 }
 
 // Extract all existing projects
-export const getAllProjects = async (req, res)=>{
-    try{
-        const { organizationId, _id, role } = req.user;
-        if(role != "project-manager")
-        {
+export const getAllProjects = async (req, res) => {
+    try {
+        const { organizationId, id, role } = req.user;
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        if(!organizationId)
-        {
+        if (!organizationId) {
             return res.status(400).json({
-                message : "please provide organization Id"
+                message: "please provide organization Id"
             })
         }
-        if(!_id)
-        {
+        if (!id) {
             return res.status(400).json({
-                message : "please provide user Id"
+                message: "please provide user Id"
             })
         }
 
-        const projects = await Project.find({ organizationId, projectManagerId: _id });
-        if(!projects || projects.length === 0){
+        const projects = await Project.find({ organizationId, projectManagerId: id });
+        if (!projects || projects.length === 0) {
             return res.status(404).json({
-                success : false,
+                success: false,
                 message: "Projects not found",
             });
         }
         return res.status(200).json({
-            success : true,
+            success: true,
             message: "Projects fetched successfully",
-            data : projects
+            data: projects
         });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to fetch projects"
+            success: false,
+            message: "Failed to fetch projects"
         })
     }
 }
 
 // Extaract detail of a existing project
-export const getProjectById = async (req, res) =>{
-    try{
-        const {projectId} = req.params;
+export const getProjectById = async (req, res) => {
+    try {
+        const { projectId } = req.params;
         const { role } = req.user;
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        if(!projectId){
+        if (!projectId) {
             return res.status(400).json({
-                message : "please provide project Id"
+                message: "please provide project Id"
             })
         }
-        const project = await Project.findById({_id: projectId});
-        if(project == null || project.length === 0){
+        const project = await Project.findById({ id: projectId });
+        if (project == null || project.length === 0) {
             return res.status(404).json({
-                success : false,
-                message : "Project not found"
+                success: false,
+                message: "Project not found"
             })
         }
 
         return res.status(200).json({
-            success : true,
-            message : "Project fetched successfully",
-            data : project
+            success: true,
+            message: "Project fetched successfully",
+            data: project
         })
 
 
-    }catch(error)
-    {
+    } catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to fetch project"
+            success: false,
+            message: "Failed to fetch project"
         })
     }
 }
@@ -479,190 +490,221 @@ export const getProjectById = async (req, res) =>{
 
 // Create new module in a existing project
 export const createModule = async (req, res) => {
-    try{
-        const { organizationId, role, _id } = req.user;
+    try {
+        const { organizationId, role, id } = req.user;
         const { projectId } = req.params;
         const { moduleName, description, teams, startFrom, completeBy, status } = req.body;
 
-        if(!organizationId || !role || !_id){
+        if (!organizationId || !role || !id) {
             return res.status(400).json({
-                message : "please provide organization Id, role and user Id"
+                message: "please provide organization Id, role and user Id"
             })
         }
 
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        if(!projectId || !moduleName || !description || !teams || !startFrom || !completeBy || !status){   
+        if (!projectId || !moduleName || !description || !teams || !startFrom || !completeBy || !status) {
             return res.status(400).json({
-                message : "please provide complete details of the module : project Id, module name, description, teams, start from, complete by and status"
+                message: "please provide complete details of the module : project Id, module name, description, teams, start from, complete by and status"
             })
         }
 
-        const module = await Module.findById({_id: projectId, moduleName});
-        if(module)
-        {
+        const module = await Module.findById({ id: projectId, moduleName });
+        if (module) {
             return res.status(400).json({
-                success : true,
-                message : "The Module already exist"
+                success: true,
+                message: "The Module already exist"
             })
         }
-        
-        const newModule = await Module.create({projectId, moduleName, description, teams, startFrom, completeBy, status});
-        if(!newModule){
+
+        const newModule = await Module.create({ projectId, moduleName, description, teams, startFrom, completeBy, status });
+        if (!newModule) {
             return res.status.json({
-                success : false,
-                message : "Failed to create module"
+                success: false,
+                message: "Failed to create module"
             })
         }
-        else{
+        else {
             return res.status(201).json({
-                success : true,
-                message : "Module created successfully",
-                data : newModule
+                success: true,
+                message: "Module created successfully",
+                data: newModule
             })
         }
-        
+
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to create module"
+            success: false,
+            message: "Failed to create module"
         })
     }
 }
 
 
 // Update the existing module
-export const updateModule = async (req, res) =>{
-    try{
+export const updateModule = async (req, res) => {
+    try {
         const moduleId = req.params.moduleId;
         const { role } = req.user;
         const { moduleName, description, teams, startFrom, completeBy, status } = req.body;
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        if(!moduleId || !moduleName || !description || !teams || !startFrom || !completeBy || !status){
+        if (!moduleId || !moduleName || !description || !teams || !startFrom || !completeBy || !status) {
             return res.status(400).json({
-                message : "please provide complete details of the module : module Id, module name, description, teams, start from, complete by and status"
+                message: "please provide complete details of the module : module Id, module name, description, teams, start from, complete by and status"
             })
         }
 
-        const updatedModule = await Module.findByIdAndUpdate({_id: moduleId}, {moduleName, description, teams, startFrom, completeBy, status});
-        if(!updatedModule){
+        const updatedModule = await Module.findByIdAndUpdate({ id: moduleId }, { moduleName, description, teams, startFrom, completeBy, status });
+        if (!updatedModule) {
             return res.status(404).json({
-                success : false,
-                message : "Module not found"
+                success: false,
+                message: "Module not found"
             })
         }
 
         return res.status(201).json({
-            success : true,
-            message : "Module updated successfully",
-            data : updatedModule  
+            success: true,
+            message: "Module updated successfully",
+            data: updatedModule
         })
 
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to update the module"
+            success: false,
+            message: "Failed to update the module"
         })
     }
 }
 
 // Delete existion module
-export const deleteModule = async (req, res) =>{
-    try{
+export const deleteModule = async (req, res) => {
+    try {
         const moduleId = req.params.moduleId;
-        const { _id:memberId, role } = req.user;
-        if(!moduleId)
-        {
+        const { id: memberId, role } = req.user;
+        if (!moduleId) {
             return res.status(400).json({
-                success : false,
-                message : "Please provide moduleId"
+                success: false,
+                message: "Please provide moduleId"
             })
         }
-        if(! memberId )
-        {
+        if (!memberId) {
             return res.status(400).json({
-                success : false,
-                message : "Please provide createrId"
+                success: false,
+                message: "Please provide createrId"
             })
         }
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        const deletedModule = await Module.findOneAndDelete({_id : moduleId, });
-        if(!deletedModule){
+        const deletedModule = await Module.findOneAndDelete({ id: moduleId, });
+        if (!deletedModule) {
             return res.status(404).json({
-                success : false,
-                message : "Module not found"
+                success: false,
+                message: "Module not found"
             })
         }
         return res.status(204).json({
-            success : true,
-            message : "Module deleted successfully",
-            data : deletedModule
+            success: true,
+            message: "Module deleted successfully",
+            data: deletedModule
         })
     }
-    catch(error){
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to delete the module"
+            success: false,
+            message: "Failed to delete the module"
         })
     }
 }
 
 // Extract all existing modules of a project
-export const getAllModulesByProjectId = async (req, res) =>{
-    try{
+export const getAllModulesByProjectId = async (req, res) => {
+    try {
         const { projectId } = req.params;
         const { role } = req.user;
-        if(role != "project-manager")
-        {
+        if (role != "project-manager") {
             return res.status(403).json({
-                success : false,
+                success: false,
                 message: "You are not authorized to access this resource",
             })
         }
-        if(!projectId)
-        {
+        if (!projectId) {
             return res.status(400).json({
-                message : "please provide project Id"
+                message: "please provide project Id"
             })
         }
         const modules = await Module.find({ projectId });
-        if(!modules || modules.length === 0){
+        if (!modules || modules.length === 0) {
             return res.status(404).json({
-                success : false,
+                success: false,
                 message: "Modules not found",
             });
         }
         return res.status(200).json({
-            success : true,
+            success: true,
             message: "Modules fetched successfully",
-            data : modules
+            data: modules
         });
     }
-    catch(error){
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Failed to fetch modules"
+            success: false,
+            message: "Failed to fetch modules"
+        })
+    }
+}
+
+// Upadate project status
+export const updateProjectStatus = async (req, res) => {
+    try {
+        const { role, id: memberId } = req.user;
+        const { ProjectId } = req.params;
+        const { newStatus } = req.body;
+        if (!role || !memberId || !ProjectId || !newStatus) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide role, memberId, ProjectId and new status"
+            })
+        }
+        if (role != "team-owner") {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. Only developers can view their teams."
+            });
+        }
+        const updatedProject = await Project.findOneAndUpdate({ id: ProjectId }, { status: newStatus });
+        if (!updatedProject) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            })
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "Status updated successfully",
+            data : updatedProject
+        })
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
         })
     }
 }

@@ -1,23 +1,42 @@
-import { createContext } from "react";
-import axios from 'axios';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-axios.defaults.baseURL = isLocalhost 
-  ? 'http://localhost:5000/api' 
-  : 'https://attendzen.onrender.com/api';
+const AuthContext = createContext();
 
-  export const AuthContext = createContext();
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [loading, setLoading] = useState(true);
 
-  export const AuthProvider = ({ children }) =>{
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
-  const resendOtp = async (email) => {
-    try {
-      const res = await axios.post('/auth/resend-otp', { email });
-      return { success: true, message: res.data.message };
-    } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Resending OTP failed' };
-    }
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  
-  }
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  const isAuthenticated = !!user;
+
+  const getRole = () => {
+    if (!user) return null;
+    if (user.role === 'master-Admin') return 'master-Admin';
+    if (Array.isArray(user.role)) return user.role[0];
+    return user.role;
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, loading, getRole }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);

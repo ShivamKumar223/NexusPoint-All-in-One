@@ -1,12 +1,11 @@
 import bcrypt from "bcryptjs";
 import Member from "../models/member.js";
-import Organization from "../models/organization.js";
 import Team from "../models/team.js";
 import Project from "../models/project.js";
 
 // Show profile of the user(Admin)
 export const getProfile = async (req, res) =>{
-    const {memberId, role:roleIs} = req.user;
+    const {organizationId, memberId, role:roleIs} = req.user;
      if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -18,7 +17,7 @@ export const getProfile = async (req, res) =>{
         }
 
     try{
-        const user = await Organization.findOne({ _id: memberId }, { password : 0 });      
+        const user = await Member.findOne({ organizationId, memberId }, { password : 0 });      
         if(!user)
         {
             return res.status(404).json({
@@ -38,7 +37,7 @@ export const getProfile = async (req, res) =>{
     {
         return res.status(500).json({
             success : false,
-            message : "Request failed"
+            message : "Login failed due to server side error"
         })
     }
 }
@@ -97,6 +96,17 @@ export const createMember = async (req, res) =>{
         }
 
    try{
+
+    if(role == "admin" || role == "master-admin")
+    {
+         return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+    }
+
     const isExistUser = await Member.findOne({organizationId, memberId});
 
     if(isExistUser)
@@ -136,9 +146,10 @@ export const createMember = async (req, res) =>{
     
 }
 
+
 // Extract all members of an organization
 export const getMembers = async (req, res) => {
-        const {memberId, organizationId, role: roleIs } = req.user;
+        const { _id:memberId, organizationId, role: roleIs } = req.user;
       if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -184,7 +195,7 @@ export const updateMember = async (req, res) =>{
         }
 
     try{
-                const updatedUser = await Member.findOneAndUpdate({ Id }, {name, role, designation, skills});
+                const updatedUser = await Member.findOneAndUpdate({ _id: req.params._id }, {name, role, designation, skills});
                 if(!updatedUser)
                 {
                     return res.status(404).json({
@@ -212,8 +223,25 @@ export const updateMember = async (req, res) =>{
 export const deleteMember = async (req, res) =>{
     try{
         const {memberId}  = req.params;
-        const { organizationId, _id: userId} = req.user;
+        const { organizationId, id: userId, role} = req.user;
         if(role != "admin")
+        {
+            return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+        }
+        const member = await Member.findOne(organizationId, memberId);
+        if(!member)
+        {
+            return res.status(404).json({
+                success : ture,
+                message : "User not found"
+            })
+        }
+        if(member.role == "admin" || member.role == "master-admin")
         {
             return res.status(403).json(
                 {
@@ -232,7 +260,6 @@ export const deleteMember = async (req, res) =>{
             })
         }
         else{
-            const deletedMember = await Member.findOneAndDelete({ memberId });
             return res.status(200).json({
                 success : true,
                 message : "Delete member successfully",
@@ -297,6 +324,16 @@ export const getTeamById = async (req, res) => {
     const teamId = req.params._id;
 
     try{
+         const { id:memberId, organizationId, role: roleIs } = req.user;
+      if(roleIs != "admin")
+        {
+            return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+        }
         const team = await Team.findById(teamId);
         if(!team){
             return res.status(404).json({
@@ -336,8 +373,10 @@ export const getAllProjects = async (req, res) => {
         }
         )}
         else{
-            success : true,
-            projects
+            return res.status(200).json({
+                success : true,
+                projects
+            })
         }
     }
     catch(error){
@@ -349,8 +388,19 @@ export const getAllProjects = async (req, res) => {
 }
 
 // Extract of an project in detail
-const getProjectById = async (req, res) =>{
+export const getProjectById = async (req, res) =>{
     try{
+         const { id:memberId, organizationId, role: roleIs } = req.user;
+      if(roleIs != "admin")
+        {
+            return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+        }
+        
         const projectId = req.params._id;
         const project = await Project.findById(projectId);
         if(!project){

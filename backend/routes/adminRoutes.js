@@ -1,14 +1,13 @@
 import express from "express";
 
-import { loginOrganization, registerOrganization } from "../controllers/organizationAuthentication.js"
 import {getProfile, createMember, updateMember, deleteMember, getMembers, getAllTeams, getTeamById, getAllProjects, getProjectById, } from "../controllers/adminFunctions.js";
 import { authMiddleware } from "../middleware/tokenVerification.js";
+import { loginMember } from "../controllers/memberAuthentication.js";
 
 const router = express.Router();
 
-router.post("/register", registerOrganization);
-router.post("/login", loginOrganization);
 
+router.post("/login", loginMember);
 router.use(authMiddleware);    //middleware for verify token
 
 router.get("/profile", getProfile);

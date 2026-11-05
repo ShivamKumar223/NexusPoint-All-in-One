@@ -1,43 +1,55 @@
 // Employee Functions
 
-import Task from "../models/task";
-import TaskEnrollment from "../models/taskEnrollment";
-import TeamEnrollment from "../models/teamEnrollment";
+import Member from "../models/member.js";
+import Task from "../models/task.js";
+import TaskEnrollment from "../models/taskEnrollment.js";
+import TeamEnrollment from "../models/teamEnrollment.js";
 
 // Get profile of Project Manager
-export const  getProfile = async (req, res) =>{
-    try{
-        const { userId } = req.user;
+export const getProfile = async (req, res) =>{
+    const {organizationId, memberId, role:roleIs} = req.user;
+     if(roleIs != "developer")
+        {
+            return res.status(403).json(
+                {
+                    success : true,
+                    message : "You are not authorized to access this resource",
+                }
+            )
+        }
 
-        const user = await Member.findOne({ userId });
+    try{
+        const user = await Member.findOne({ organizationId, memberId }, { password : 0 });      
         if(!user)
-            {
-                return res.status(404).json({
-                    message : "User not exist"
-                })
-            }
-            else{
-            const { password, ...userWithoutPassword } = user;
+        {
+            return res.status(404).json({
+                success : false,
+                message : "User not found"
+            })
+        }
+        else{
             return res.status(200).json({
                 success : true,
-                data : userWithoutPassword
+                message : "Success",
+                data : user
             })
         }
     }
     catch(error)
     {
         return res.status(500).json({
-            success : true,
-            message : "Request failed"
+            success : false,
+            message : "Login failed due to server side error"
         })
     }
 }
 
 
+
 // Retrieve all tasks assigned to the employee
 export const getMyTasks = async (req, res) => {
   try {
-    const { role, _id:memberId } = req.user;
+    const { role, id:memberId } = req.user;
 
     if (role !== "developer") {
       return res.status(403).json({
@@ -87,7 +99,7 @@ export const getMyTasks = async (req, res) => {
 // Update the task status
 export const updateTaskStatus = async (req, res)=>{
   try{
-     const { role, _id:memberId } = req.user;
+     const { role, id:memberId } = req.user;
      const { taskId } = req.params;
      const { newStatus } = req.body;
      if(!role || !memberId || !taskId || !newStatus)
@@ -104,7 +116,7 @@ export const updateTaskStatus = async (req, res)=>{
         message: "Access denied. Only developers can update task status."
       });
      }
-     const updatedTask = await Task.findOneAndUpdate({_id:taskId},{status : {$eq: newStatus}});
+     const updatedTask = await Task.findOneAndUpdate({_id:taskId},{status : newStatus});
      if(!updatedTask){
       return res.status(404).json({
         success : false,
@@ -132,7 +144,7 @@ export const updateTaskStatus = async (req, res)=>{
 // This function considers that one employee can be part of only one team at a time.
 export const getMyTeams = async (req, res)=>{
   try {
-  const { role, _id: memberId } = req.user;
+  const { role, id: memberId } = req.user;
 
   if(role !== "developer" && role !== "team-owner") {
     return res.status(403).json({

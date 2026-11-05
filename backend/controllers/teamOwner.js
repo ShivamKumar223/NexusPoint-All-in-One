@@ -1,12 +1,15 @@
 // Team Owne Functions
 
-import Module from "../models/module";
-import ModuleEnrollment from "../models/moduleEnrollment";
+import Module from "../models/module.js";
+import ModuleEnrollment from "../models/moduleEnrollment.js";
+import Task from "../models/task.js";
+import TaskEnrollment from "../models/taskEnrollment.js";
+import TeamEnrollment from "../models/teamEnrollment.js";
 
 // Get profile of Project Manager
 export const  getProfile = async (req, res) =>{
     try{
-        const { userId } = req.user;
+        const { id:userId } = req.user;
 
         const user = await Member.findOne({ userId });
         if(!user)
@@ -36,7 +39,7 @@ export const  getProfile = async (req, res) =>{
 // Extract all Modules associated with a team owner
 export const getMyModules = async (req, res)=>{
     try{
-        const { role, _id:memberId } = req.user;
+        const { role, id:memberId } = req.user;
         if(!role || !memberId)
         {
             return res.status(400).json({
@@ -51,8 +54,8 @@ export const getMyModules = async (req, res)=>{
                 message: "Access denied. Only team owners can create tasks."
             })
         }
-        const modules = await ModuleEnrollment.find({memberId});
-        if(!modules)
+        const myModules = await ModuleEnrollment.find({memberId}).populate("Module");
+        if(!myModules)
         {
             return res.status(204).json({
                 success : false,
@@ -63,7 +66,7 @@ export const getMyModules = async (req, res)=>{
         return res.status(200).json({
             success : true,
             message : "Success",
-            data : modules
+            data : myModules
         })
 
     }
@@ -110,6 +113,11 @@ export const createTask = async (req, res) => {
                 success: false,
                 message: "Task creation failed."
             });
+        }
+        const { members:taskMembers, id } = newTask;
+        for(const member of taskMembers)
+        {
+            TaskEnrollment.findById(member, {$push : {tasks: id}})
         }
         return res.status(201).json({
             success: true,
@@ -198,6 +206,11 @@ export const deleteTask = async (req, res) => {
                 message: "Task deletion failed."
             });
         }
+        const { members:taskMembers, id} = deletedTask;
+        for(const member of taskMembers)
+        {
+            TaskEnrollment.findById(member, {$pull : {tasks: id}});
+        }
         return res.status(204).json({
             success: true,
             message: "Task deleted successfully.",
@@ -255,7 +268,7 @@ export const getAllTasksByModoleId = async (req, res) => {
 // Extract the team associated with the team owner
 export const getMyTeams = async (req, res) => {
     try {
-        const { role, _id: memberId } = req.user;
+        const { role, id: memberId } = req.user;
 
         if (role !== "developer" && role !== "team-owner") {
             return res.status(403).json({
@@ -303,13 +316,13 @@ export const updateModuleStatus = async (req, res) => {
                 message: "Please provide role, memberId, ModuleId and new status"
             })
         }
-        if (role != "team-woner") {
+        if (role != "team-owner") {
             return res.status(403).json({
                 success: false,
                 message: "Access denied. Only developers can view their teams."
             });
         }
-        const updatedModule = await Module.findOneAndUpdate({ _id: moduleId }, { status: { $eq: newStatus } });
+        const updatedModule = await Module.findOneAndUpdate({ _id: moduleId }, { status: newStatus });
         if (!updatedModule) {
             return res.status(404).json({
                 success: false,

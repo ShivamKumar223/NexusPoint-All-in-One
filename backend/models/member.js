@@ -20,28 +20,25 @@ const memberSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        role : {
-            type : [String],
-            required : true,
-            enum: [
-                "admin",
-                "project-manager",
-                "team-owner",
-                "developer"
+        role: {
+            type: [
+                {
+                    type: String,
+                    enum: ["admin", "project-manager", "team-owner", "developer"]
+                }
             ],
+            required: true,
+            validate: [v => Array.isArray(v) && v.length > 0, "At least one role is required."]
         },
         designation : {
             type : String,
             required : true,
             trim : true
         },
-        skills : {
-            type : [
-                {
-                    type : String,
-                    trim : true
-                }],
-            required : true,
+        skills: {
+            type: [String], // Clean, unnested syntax
+            trim: true,
+            required: true
         }
     },
     {

@@ -1,0 +1,43 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  height: 60px;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 50;
+}
+.topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+.topbar-title { font-size: 1.15rem; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 0.5rem; }
+.topbar-notif { position: relative; }
+.notif-dot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  border: 2px solid var(--topbar-bg);
+}
+.topbar-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.topbar-menu-btn { display: none; }
+
+@media (max-width: 1024px) {
+  .topbar-menu-btn { display: flex; }
+}
+@media (max-width: 768px) {
+  .topbar { padding: 0 1rem; }
+  .topbar-title { font-size: 1rem; }
+}
