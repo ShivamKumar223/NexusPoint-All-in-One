@@ -38,14 +38,15 @@ export const getMyModules = async (req, res) => {
             return res.status(403).json({ success: false, message: "Access denied. Only team owners can view modules." });
         }
 
-        const enrollment = await ModuleEnrollment.findOne({ memberId: userId })
-            .populate({
-                path: "modules",
-                populate: [
-                    { path: "teams", model: "Team", select: "teamName members description" },
-                ]
-            });
-
+        // const enrollment = await ModuleEnrollment.findOne({ memberId: userId })
+        //     .populate({
+        //         path: "modules",
+        //         populate: [
+        //             { path: "teams", model: "Team", select: "teamName members description" },
+        //         ]
+        //     });
+        const enrollment = await ModuleEnrollment.findOne({ memberId: userId }).populate("modules");
+        console.log("enrollment : " ,enrollment);
         if (!enrollment) {
             return res.status(200).json({ success: true, message: "No module enrollment found.", data: [] });
         }
@@ -74,10 +75,22 @@ export const createTask = async (req, res) => {
         if (!newTask) {
             return res.status(400).json({ success: false, message: "Task creation failed." });
         }
-
-        return res.status(201).json({ success: true, message: "Task created successfully.", data: newTask });
+        const { members:taskMembers, id: taskId } = newTask;
+        for(const member of taskMembers)
+        {
+            await TaskEnrollment.findOneAndUpdate({memberId:member}, {$addToSet:{tasks: taskId}},{ upsert: true });
+        }
+        return res.status(201).json({ 
+            success: true, 
+            message: "Task created successfully.", 
+            data: newTask 
+        });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error", 
+            error: error.message 
+        });
     }
 };
 

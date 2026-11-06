@@ -59,7 +59,7 @@ export const updateProfile = async (req, res) => {
 
     try {
 
-        const user = await Organization.findOneAndUpdate({ id:organizationId }, { organizationName, ownerName });
+        const user = await Organization.findByIdAndUpdate(organizationId , { organizationName, ownerName });
 
         if (!user) {
             return res.status(404).json({
@@ -128,7 +128,7 @@ export const createMember = async (req, res) => {
 
     }
     catch (error) {
-        console.log("Real error",error);
+        console.log("Real error : ",error);
         return res.status(500).json({
             success: false,
             message: "Failed to create member's log"
@@ -184,7 +184,7 @@ export const updateMember = async (req, res) => {
     }
 
     try {
-        const updatedUser = await Member.findOneAndUpdate({ organizationId, id: memberId }, { name, role, designation, skills });
+        const updatedUser = await Member.findByIdAndUpdate(memberId , { name, role, designation, skills });
         if (!updatedUser) {
             return res.status(404).json({
                 success: false,
@@ -211,6 +211,7 @@ export const updateMember = async (req, res) => {
 export const deleteMember = async (req, res) => {
     try {
         const { memberId } = req.params;
+        // console.log(memberId);
         const { role:roleIs } = req.user;
         if (roleIs != "master-admin") {
             return res.status(403).json(
@@ -220,15 +221,8 @@ export const deleteMember = async (req, res) => {
                 }
             )
         }
-        const member = await Member.findOne({id: memberId});
-        if (!member) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            })
-        }
-
-        const deletedUser = await Member.findOneAndDelete({id:memberId });
+      
+        const deletedUser = await Member.findByIdAndDelete(memberId);
         if (!deletedUser) {
             return res.status(404).json({
                 success: false,

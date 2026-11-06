@@ -7,10 +7,13 @@ import SearchFilter from '../../components/common/SearchFilter';
 import Modal from '../../components/common/Modal';
 import { IoAdd, IoTrash, IoCreate, IoEyeOutline } from 'react-icons/io5';
 import '../shared/Shared.css';
+import { useAuth } from '../../context/AuthContext';
 
 const MemberList = () => {
   const navigate = useNavigate();
   const { setActiveMenu } = useMenu();
+  const { getRole } = useAuth();
+  const [role, setRole] = useState(()=>getRole());
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -18,11 +21,17 @@ const MemberList = () => {
   const [editModal, setEditModal] = useState({ open: false, member: null });
   const [editForm, setEditForm] = useState({ name: '', designation: '', skills: '' });
 
+  const roleMap = new Map();
+  roleMap.set("admin", "Admin");
+  roleMap.set("project-manager", "Project Manager");
+  roleMap.set("team-owner", "Team Owner");
+  roleMap.set("developer", "Developer");
+
   useEffect(() => { setActiveMenu('members'); fetchMembers(); }, []);
 
   const fetchMembers = async () => {
     try {
-      const res = await API.get('/master-admin/members');
+      const res = await API.get(`/${role}/members`);
       setMembers(res.data.data || res.data.members || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -31,7 +40,7 @@ const MemberList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this member?')) return;
     try {
-      await API.delete(`/master-admin/member/${id}`);
+      await API.delete(`/${role}/member/${id}`);
       toast.success('Member deleted');
       fetchMembers();
     } catch (err) { toast.error(err.response?.data?.message || 'Delete failed'); }
@@ -45,7 +54,7 @@ const MemberList = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await API.patch(`/master-admin/member/${editModal.member._id}`, {
+      await API.patch(`/${role}/member/${editModal.member.id}`, {
         name: editForm.name, designation: editForm.designation,
         skills: editForm.skills.split(',').map(s => s.trim()).filter(Boolean),
       });
@@ -87,7 +96,7 @@ const MemberList = () => {
                 <tr key={m._id}>
                   <td style={{ fontWeight: 500 }}>{m.name}</td>
                   <td><code style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{m.memberId}</code></td>
-                  <td>{(Array.isArray(m.role) ? m.role : [m.role]).map(r => <span key={r} className="badge badge-inprogress" style={{ marginRight: 4 }}>{r}</span>)}</td>
+                  <td>{(Array.isArray(m.role) ? m.role : [m.role]).map(r => <span key={r} className="badge badge-inprogress" style={{ marginRight: 4 }}>{roleMap.get(r)}</span>)}</td>
                   <td>{m.designation}</td>
                   <td>{m.skills?.slice(0, 3).join(', ')}{m.skills?.length > 3 ? '...' : ''}</td>
                   <td>

@@ -2,53 +2,49 @@ import mongoose from "mongoose";
 
 const moduleSchema = new mongoose.Schema(
     {
-        projectId : {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : "Project",
-            required : true
+        projectId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Project",
+            required: true
         },
-        moduleName : {
-            type : String,
-            required : true,
-            trim : true
+        moduleName: {
+            type: String,
+            required: true,
+            trim: true
         },
-        description : {
-            type : String,
-            required : true,
-            trim : true
+        description: {
+            type: String,
+            required: true,
+            trim: true
         },
-        teams :{
-            type : [
-                {
-                    type : mongoose.Schema.Types.ObjectId,
-                    ref  : "Team"
-                },
-            ],
-            required : true
+        teams: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "Team",
+            required: true
         },
-        startFrom : {
-            type : Date,
-            default : Date.now
+        startFrom: {
+            type: Date,
+            default: Date.now
         },
-        completeBy : {
-            type : Date,
-            required : true
+        completeBy: {
+            type: Date,
+            required: true
         },
-        status : {
-            type : String,
-            required : true,
-            enum : [
+        status: {
+            type: String,
+            required: true,
+            enum: [
                 "pending",
                 "inprogress",
                 "review",
                 "complete",
                 "archive"
             ],
-            default : "pending"
+            default: "pending"
         }
     },
     {
-        timestamps : true
+        timestamps: true
     }
 );
 

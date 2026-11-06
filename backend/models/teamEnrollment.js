@@ -8,7 +8,6 @@ const teamEnrollmentSchema = new mongoose.Schema({
     teams :{
         type : [mongoose.Schema.Types.ObjectId],  
         ref : "Team",
-        unique : true,  //Note : 👈 Ensures duplicate Member IDs cannot be added to this array
     }
 },
 {

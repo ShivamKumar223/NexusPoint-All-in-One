@@ -6,7 +6,7 @@ const projectSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Organization",
       required: true,
-      index: true
+      // index: true
     },
 
     projectManagerId: {
@@ -23,15 +23,15 @@ const projectSchema = new mongoose.Schema(
 
     description: {
       type: String,
-      required: true,
+      required: true, 
       trim: true
     },
 
     teams: 
       {
         type: [mongoose.Schema.Types.ObjectId],
-        ref: "Team",              
-        unique: true,
+        ref: "Team",  
+        // unique: true,
       },
 
     startFrom: {

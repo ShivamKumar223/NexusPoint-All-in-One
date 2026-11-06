@@ -6,6 +6,7 @@ import Project from "../models/project.js";
 // Show profile of the user(Admin)
 export const getProfile = async (req, res) =>{
     const {organizationId,userId, memberId, role:roleIs} = req.user;
+    console.log("hello : ", roleIs)
      if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -197,7 +198,7 @@ export const updateMember = async (req, res) =>{
         }
 
     try{
-                const updatedUser = await Member.findOneAndUpdate({ organizationId, memberId }, {name, role, designation, skills});
+                const updatedUser = await Member.findByIdAndUpdate( memberId , {name, role, designation, skills});
                 if(!updatedUser)
                 {
                     return res.status(404).json({
@@ -253,7 +254,7 @@ export const deleteMember = async (req, res) =>{
             )
         }
 
-        const deletedUser = await Member.findOneAndDelete({ organizationId, memberId });
+        const deletedUser = await Member.findByIdAndDelete(memberId);
         if(!deletedUser)
         {
             return res.status(404).json({
@@ -286,7 +287,7 @@ export const getAllTeams = async (req, res) => {
     const { organizationId, userId, role } = req.user;
 
     try{
-        if(role !== "admin") {
+        if(role != "admin") {
             return res.status(403).json({
                 success : false,
                 message: "You are not authorized to access this resource",
@@ -300,7 +301,7 @@ export const getAllTeams = async (req, res) => {
         //     })
         // }
 
-        const teams = await Team.find({ organizationId }).populate("Member", "name memberId role designation skills");
+        const teams = await Team.find({ organizationId }).populate("members", "name memberId role designation skills");
         if(!teams){
             return res.status(404).json({
                 success : false,
@@ -337,7 +338,7 @@ export const getTeamById = async (req, res) => {
                 }
             )
         }
-        const team = await Team.findById(teamId).populate("Member", "name memberId role designation skills");
+        const team = await Team.findById(teamId).populate("members", "name memberId role designation skills");
         if(!team){
             return res.status(404).json({
                 message: "Team not found",
@@ -363,12 +364,13 @@ export const getTeamById = async (req, res) => {
 export const getAllProjects = async (req, res) => {
     try{
     const { organizationId, role } = req.user;
+    console.log(role);
     if(role !== "admin") {
         return res.status(403).json({
             message: "You are not authorized to access this resource",
         });
     }
-    const projects = await Project.find({ organizationId }).populate("Team").populate("Member", "name memberId role designation skills");
+    const projects = await Project.find({ organizationId }).populate("teams");
     if(!projects){
         return res.status(404).json({
             success : false,
@@ -393,6 +395,7 @@ export const getAllProjects = async (req, res) => {
 // Extract of an project in detail
 export const getProjectById = async (req, res) =>{
     try{
+        const projectId = req.params.projectId;
          const { memberId, organizationId, role: roleIs } = req.user;
       if(roleIs != "admin")
         {
@@ -404,8 +407,7 @@ export const getProjectById = async (req, res) =>{
             )
         }
         
-        const projectId = req.params.projectId;
-        const project = await Project.findById(projectId).populate("Team").populate("Member", "name memberId role designation skills");;
+        const project = await Project.findById(projectId).populate("teams");
         if(!project){
             return res.status(404).json({
                 message: "Project not found",

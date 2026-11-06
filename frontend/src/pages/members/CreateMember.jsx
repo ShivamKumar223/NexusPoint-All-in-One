@@ -17,7 +17,7 @@ const CreateMember = () => {
     setLoading(true);
     try {
       await API.post('/master-admin/member', {
-        name: form.name, role: [form.role], memberId: form.memberId,
+        name: form.name, role: form.role, memberId: form.memberId,
         password: form.password, designation: form.designation,
         skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
       });

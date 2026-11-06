@@ -26,7 +26,6 @@ const teamSchema = new mongoose.Schema(
             type: [mongoose.Schema.Types.ObjectId],
             ref: "Member",
             required: true,
-            unique: true
         },
     },
     {
