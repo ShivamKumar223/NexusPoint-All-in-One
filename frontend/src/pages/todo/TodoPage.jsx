@@ -1,47 +1,116 @@
 import { useState, useEffect } from 'react';
-import { useMenu } from '../../context/MenuContext';
-import { IoAdd, IoTrash, IoCheckmarkCircle, IoCalendar, IoEllipseOutline } from 'react-icons/io5';
-import '../shared/Shared.css';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
+import { toast } from 'react-toastify';
+import {
+  IoAddOutline, IoTrashOutline, IoCheckmarkCircle, IoEllipseOutline,
+  IoCalendarOutline, IoFlagOutline, IoCreateOutline, IoCloseOutline
+} from 'react-icons/io5';
 import './TodoPage.css';
 
-const PRIORITIES = ['low', 'medium', 'high'];
-const STORAGE_KEY = 'sdc_todos';
+const PRIORITY_OPTIONS = ['low', 'medium', 'high'];
+const priorityColor = (p) => ({ low: 'success', medium: 'warning', high: 'danger' }[p] || 'secondary');
 
 const TodoPage = () => {
-  const { setActiveMenu } = useMenu();
-  const [todos, setTodos] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
-  });
+  const { user } = useAuth();
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editTodo, setEditTodo] = useState(null);
   const [form, setForm] = useState({ title: '', description: '', dueDate: '', priority: 'medium' });
-  const [filter, setFilter] = useState('all');
-  const [adding, setAdding] = useState(false);
+  const [filter, setFilter] = useState('all'); // all | active | completed
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { setActiveMenu('todo'); }, []);
-  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }, [todos]);
+  const fetchTodos = async () => {
+    try {
+      const res = await api.get('/todo');
+      setTodos(res.data.data || []);
+    } catch {
+      // Fallback to localStorage
+      const key = `sdc_todos_${user?._id || user?.userId || 'guest'}`;
+      const saved = localStorage.getItem(key);
+      setTodos(saved ? JSON.parse(saved) : []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const addTodo = (e) => {
-    e.preventDefault();
-    if (!form.title.trim()) return;
-    const newTodo = {
-      id: Date.now(),
-      title: form.title,
-      description: form.description,
-      dueDate: form.dueDate,
-      priority: form.priority,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-    setTodos(prev => [newTodo, ...prev]);
+  useEffect(() => { fetchTodos(); }, []);
+
+  const saveLocal = (updatedTodos) => {
+    const key = `sdc_todos_${user?._id || user?.userId || 'guest'}`;
+    localStorage.setItem(key, JSON.stringify(updatedTodos));
+  };
+
+  const resetForm = () => {
     setForm({ title: '', description: '', dueDate: '', priority: 'medium' });
-    setAdding(false);
+    setEditTodo(null);
+    setShowForm(false);
   };
 
-  const toggleTodo = (id) => {
-    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title.trim()) return toast.error('Title is required');
+    setSubmitting(true);
+    try {
+      if (editTodo) {
+        const res = await api.patch(`/todo/${editTodo._id}`, form);
+        setTodos(prev => prev.map(t => t._id === editTodo._id ? res.data.data : t));
+      } else {
+        const res = await api.post('/todo', form);
+        setTodos(prev => [res.data.data, ...prev]);
+      }
+      toast.success(editTodo ? 'Todo updated!' : 'Todo added!');
+      resetForm();
+    } catch {
+      // Fallback: localStorage
+      if (editTodo) {
+        const updated = todos.map(t => t._id === editTodo._id ? { ...t, ...form } : t);
+        setTodos(updated);
+        saveLocal(updated);
+      } else {
+        const newTodo = { _id: Date.now().toString(), ...form, completed: false, createdAt: new Date().toISOString() };
+        const updated = [newTodo, ...todos];
+        setTodos(updated);
+        saveLocal(updated);
+      }
+      toast.success(editTodo ? 'Todo updated!' : 'Todo added!');
+      resetForm();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const deleteTodo = (id) => {
-    setTodos(prev => prev.filter(t => t.id !== id));
+  const toggleComplete = async (todo) => {
+    try {
+      const res = await api.patch(`/todo/${todo._id}`, { completed: !todo.completed });
+      setTodos(prev => prev.map(t => t._id === todo._id ? res.data.data : t));
+    } catch {
+      const updated = todos.map(t => t._id === todo._id ? { ...t, completed: !t.completed } : t);
+      setTodos(updated);
+      saveLocal(updated);
+    }
+  };
+
+  const handleDelete = async (todoId) => {
+    try {
+      await api.delete(`/todo/${todoId}`);
+    } catch { /* ignore for local */ }
+    const updated = todos.filter(t => t._id !== todoId);
+    setTodos(updated);
+    saveLocal(updated);
+    toast.success('Todo deleted');
+  };
+
+  const startEdit = (todo) => {
+    setEditTodo(todo);
+    setForm({
+      title: todo.title,
+      description: todo.description || '',
+      dueDate: todo.dueDate ? todo.dueDate.split('T')[0] : '',
+      priority: todo.priority || 'medium'
+    });
+    setShowForm(true);
   };
 
   const filtered = todos.filter(t => {
@@ -50,93 +119,126 @@ const TodoPage = () => {
     return true;
   });
 
-  const priorityColor = { low: 'var(--success)', medium: 'var(--warning)', high: 'var(--danger)' };
+  const stats = {
+    total: todos.length,
+    active: todos.filter(t => !t.completed).length,
+    completed: todos.filter(t => t.completed).length
+  };
 
-  const counts = { all: todos.length, active: todos.filter(t => !t.completed).length, completed: todos.filter(t => t.completed).length };
+  if (loading) return <div className="page-loading">Loading todos...</div>;
 
   return (
-    <div className="feature-page todo-page">
-      <div className="page-header">
-        <h1>My Todo List</h1>
-        <button className="btn btn-primary" onClick={() => setAdding(true)}><IoAdd size={18} /> Add Todo</button>
+    <div className="todo-page">
+      <div className="todo-header">
+        <div>
+          <h1 className="page-title">My Todo List</h1>
+          <p className="page-subtitle">Personal task planner — only visible to you</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditTodo(null); setForm({ title: '', description: '', dueDate: '', priority: 'medium' }); }}>
+          <IoAddOutline size={18} /> Add Todo
+        </button>
       </div>
 
-      {adding && (
-        <div className="card todo-form-card">
-          <h3 style={{ marginBottom: '1rem' }}>New Todo</h3>
-          <form onSubmit={addTodo}>
+      {/* Stats */}
+      <div className="todo-stats">
+        <div className={`todo-stat-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+          All <span className="todo-stat-count">{stats.total}</span>
+        </div>
+        <div className={`todo-stat-btn ${filter === 'active' ? 'active' : ''}`} onClick={() => setFilter('active')}>
+          Active <span className="todo-stat-count">{stats.active}</span>
+        </div>
+        <div className={`todo-stat-btn ${filter === 'completed' ? 'active' : ''}`} onClick={() => setFilter('completed')}>
+          Completed <span className="todo-stat-count">{stats.completed}</span>
+        </div>
+      </div>
+
+      {/* Add/Edit Form */}
+      {showForm && (
+        <div className="todo-form-card">
+          <div className="todo-form-header">
+            <h3>{editTodo ? 'Edit Todo' : 'New Todo'}</h3>
+            <button className="btn-icon" onClick={resetForm}><IoCloseOutline size={20} /></button>
+          </div>
+          <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Title</label>
-              <input className="form-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="What needs to be done?" required />
+              <input
+                className="form-input"
+                placeholder="Todo title *"
+                value={form.title}
+                onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                required
+                autoFocus
+              />
             </div>
             <div className="form-group">
-              <label>Description (optional)</label>
-              <textarea className="form-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Add details..." />
+              <textarea
+                className="form-textarea"
+                placeholder="Description (optional)"
+                value={form.description}
+                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                rows={2}
+              />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-row">
               <div className="form-group">
-                <label>Due Date</label>
-                <input className="form-input" type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
+                <input
+                  type="date"
+                  className="form-input"
+                  value={form.dueDate}
+                  onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
+                />
               </div>
               <div className="form-group">
-                <label>Priority</label>
-                <select className="form-input" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
-                  {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                <select className="form-select" value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))}>
+                  {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)} Priority</option>)}
                 </select>
               </div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-outline" onClick={() => setAdding(false)}>Cancel</button>
-              <button type="submit" className="btn btn-primary">Add Todo</button>
+              <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? 'Saving...' : editTodo ? 'Update' : 'Add Todo'}
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="todo-tabs">
-        {['all', 'active', 'completed'].map(tab => (
-          <button key={tab} className={`todo-tab ${filter === tab ? 'todo-tab-active' : ''}`} onClick={() => setFilter(tab)}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            <span className="todo-tab-count">{counts[tab]}</span>
-          </button>
-        ))}
-      </div>
-
+      {/* Todo List */}
       {filtered.length === 0 ? (
-        <div className="empty-state">
-          <IoCalendar size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-          <h3>No todos here</h3>
-          <p>{filter === 'completed' ? 'No completed tasks yet.' : 'Add your first todo!'}</p>
+        <div className="todo-empty">
+          <IoCheckmarkCircle size={48} />
+          <p>{filter === 'completed' ? 'No completed todos yet.' : filter === 'active' ? 'All caught up! 🎉' : 'No todos yet. Add one to get started!'}</p>
         </div>
       ) : (
         <div className="todo-list">
           {filtered.map(todo => (
-            <div key={todo.id} className={`todo-item ${todo.completed ? 'todo-completed' : ''}`}>
-              <button className="todo-check-btn" onClick={() => toggleTodo(todo.id)}>
-                {todo.completed
-                  ? <IoCheckmarkCircle size={22} style={{ color: 'var(--success)' }} />
-                  : <IoEllipseOutline size={22} style={{ color: 'var(--text-muted)' }} />
-                }
+            <div key={todo._id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+              <button className="todo-check" onClick={() => toggleComplete(todo)}>
+                {todo.completed ? <IoCheckmarkCircle size={22} className="text-success" /> : <IoEllipseOutline size={22} />}
               </button>
               <div className="todo-content">
-                <div className="todo-header-row">
-                  <h4 className="todo-title">{todo.title}</h4>
-                  <div className="todo-meta">
-                    <span className="todo-priority" style={{ color: priorityColor[todo.priority] }}>
-                      ● {todo.priority}
+                <div className="todo-title">{todo.title}</div>
+                {todo.description && <div className="todo-desc">{todo.description}</div>}
+                <div className="todo-meta">
+                  {todo.dueDate && (
+                    <span className="todo-meta-item">
+                      <IoCalendarOutline size={12} /> {new Date(todo.dueDate).toLocaleDateString()}
                     </span>
-                    {todo.dueDate && (
-                      <span className="todo-due">
-                        <IoCalendar size={12} /> {new Date(todo.dueDate).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                  <span className={`badge badge-sm badge-${priorityColor(todo.priority)}`}>
+                    <IoFlagOutline size={11} /> {todo.priority}
+                  </span>
                 </div>
-                {todo.description && <p className="todo-desc">{todo.description}</p>}
               </div>
-              <button className="btn-icon todo-delete" onClick={() => deleteTodo(todo.id)}>
-                <IoTrash size={16} />
-              </button>
+              <div className="todo-actions">
+                <button className="btn-icon" onClick={() => startEdit(todo)} title="Edit">
+                  <IoCreateOutline size={16} />
+                </button>
+                <button className="btn-icon text-danger" onClick={() => handleDelete(todo._id)} title="Delete">
+                  <IoTrashOutline size={16} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

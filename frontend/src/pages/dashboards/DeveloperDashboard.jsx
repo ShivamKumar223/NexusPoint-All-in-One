@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import { IoCheckbox, IoCalendar, IoCheckmarkCircle, IoPeopleCircle, IoTrendingUp } from 'react-icons/io5';
 import ProgressBar from '../../components/common/ProgressBar';
+import OrgInfo from '../../components/common/OrgInfo';
+import '../../components/common/OrgInfo.css';
 import './Dashboard.css';
 
 const DeveloperDashboard = () => {
@@ -37,6 +39,7 @@ const DeveloperDashboard = () => {
   return (
     <div className="dashboard-page">
       <div className="welcome-banner"><h1>Welcome, {user?.name || 'Developer'}!</h1><p>Developer Dashboard</p></div>
+      <OrgInfo />
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(108,99,255,0.15)', color: '#6c63ff' }}><IoCheckbox size={22} /></div><div className="stat-info"><h3>{tasks.length}</h3><p>Assigned Tasks</p></div></div>
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(63,185,80,0.15)', color: '#3fb950' }}><IoCheckmarkCircle size={22} /></div><div className="stat-info"><h3>{sc.complete}</h3><p>Completed</p></div></div>

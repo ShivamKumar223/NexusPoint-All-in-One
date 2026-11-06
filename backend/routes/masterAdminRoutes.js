@@ -18,8 +18,10 @@ router.get("/members", getMembers);
 router.post("/member", createMember);
 router.patch("/member/:memberId", updateMember);
 router.delete("/member/:memberId", deleteMember);
+
 router.get("/teams", getAllTeams);
 router.get("/team/:teamId", getTeamById);
+
 router.get("/projects", getAllProjects);
 router.get("/project/:projectId", getProjectById);
 

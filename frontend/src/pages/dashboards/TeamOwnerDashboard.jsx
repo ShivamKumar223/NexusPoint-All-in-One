@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import { IoLayers, IoCheckbox, IoAdd, IoCalendar, IoPeopleCircle, IoTrendingUp } from 'react-icons/io5';
 import ProgressBar from '../../components/common/ProgressBar';
+import OrgInfo from '../../components/common/OrgInfo';
+import '../../components/common/OrgInfo.css';
 import './Dashboard.css';
 
 const TeamOwnerDashboard = () => {
@@ -37,6 +39,7 @@ const TeamOwnerDashboard = () => {
   return (
     <div className="dashboard-page">
       <div className="welcome-banner"><h1>Welcome, {user?.name || 'Team Owner'}!</h1><p>Team Owner Dashboard</p></div>
+      <OrgInfo />
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(108,99,255,0.15)', color: '#6c63ff' }}><IoLayers size={22} /></div><div className="stat-info"><h3>{modules.length}</h3><p>Assigned Modules</p></div></div>
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(210,153,34,0.15)', color: '#d29922' }}><IoPeopleCircle size={22} /></div><div className="stat-info"><h3>{teams.length}</h3><p>My Teams</p></div></div>

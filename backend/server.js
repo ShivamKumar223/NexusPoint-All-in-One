@@ -9,6 +9,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import pmRoutes from "./routes/projectManagerRoutes.js"
 import tmownerRoutes from "./routes/teamOwnerRoutes.js"
 import employeeRoutes from "./routes/employeeRoutes.js"
+import todoRoutes from "./routes/todoRoutes.js"
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/project-manager", pmRoutes);
 app.use("/api/team-owner", tmownerRoutes);
 app.use("/api/employee", employeeRoutes);
+app.use("/api/todo", todoRoutes);
 
 const PORT = process.env.PORT || 7000;
 

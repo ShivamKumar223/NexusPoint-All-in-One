@@ -13,14 +13,15 @@
 .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
 .topbar-title { font-size: 1.15rem; font-weight: 600; }
 .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
-.topbar-notif { position: relative; }
-.notif-dot {
-  position: absolute;
-  top: 6px; right: 6px;
-  width: 8px; height: 8px;
-  background: var(--danger);
-  border-radius: 50%;
-  border: 2px solid var(--topbar-bg);
+.topbar-user { display: flex; align-items: center; gap: 0.5rem; }
+.topbar-username {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .topbar-avatar {
   width: 34px; height: 34px;
@@ -31,6 +32,7 @@
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .topbar-menu-btn { display: none; }
 
@@ -40,4 +42,5 @@
 @media (max-width: 768px) {
   .topbar { padding: 0 1rem; }
   .topbar-title { font-size: 1rem; }
+  .topbar-username { display: none; }
 }

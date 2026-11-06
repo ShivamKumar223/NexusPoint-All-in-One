@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import { IoFolderOpen, IoPeopleCircle, IoLayers, IoFolder, IoTrendingUp } from 'react-icons/io5';
 import ProgressBar from '../../components/common/ProgressBar';
+import OrgInfo from '../../components/common/OrgInfo';
+import '../../components/common/OrgInfo.css';
 import './Dashboard.css';
 
 const ProjectManagerDashboard = () => {
@@ -37,6 +39,7 @@ const ProjectManagerDashboard = () => {
   return (
     <div className="dashboard-page">
       <div className="welcome-banner"><h1>Welcome, {user?.name || 'PM'}!</h1><p>Project Manager Dashboard</p></div>
+      <OrgInfo />
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(108,99,255,0.15)', color: '#6c63ff' }}><IoFolder size={22} /></div><div className="stat-info"><h3>{projects.length}</h3><p>My Projects</p></div></div>
         <div className="stat-card"><div className="stat-icon" style={{ background: 'rgba(210,153,34,0.15)', color: '#d29922' }}><IoPeopleCircle size={22} /></div><div className="stat-info"><h3>{teams.length}</h3><p>My Teams</p></div></div>

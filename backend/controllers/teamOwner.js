@@ -11,12 +11,14 @@ export const  getProfile = async (req, res) =>{
     try{
         const { id:userId } = req.user;
 
-        const user = await Member.findOne({ userId });
+        const user = await Member.findOne({ userId },{password : 0});
         if(!user)
             {
                 return res.status(404).json({
+                    success : false,
                     message : "User not exist"
                 })
+
             }
             else{
             const { password, ...userWithoutPassword } = user;

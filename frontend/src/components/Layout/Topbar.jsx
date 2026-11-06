@@ -1,11 +1,12 @@
 import { useAuth } from '../../context/AuthContext';
 import { useMenu } from '../../context/MenuContext';
 import { useTheme } from '../../context/ThemeContext';
-import { IoMenuOutline, IoSunnyOutline, IoMoonOutline, IoNotificationsOutline } from 'react-icons/io5';
+import { IoMenuOutline, IoSunnyOutline, IoMoonOutline } from 'react-icons/io5';
+import NotificationPanel from '../common/NotificationPanel';
 import './Topbar.css';
 
 const Topbar = () => {
-  const { user, getRole } = useAuth();
+  const { user } = useAuth();
   const { activeMenu, toggleSidebar } = useMenu();
   const { theme, toggleTheme } = useTheme();
 
@@ -24,12 +25,10 @@ const Topbar = () => {
         <button className="btn-icon" onClick={toggleTheme} title="Toggle theme">
           {theme === 'dark' ? <IoSunnyOutline size={20} /> : <IoMoonOutline size={20} />}
         </button>
-        <button className="btn-icon topbar-notif">
-          <IoNotificationsOutline size={20} />
-          <span className="notif-dot" />
-        </button>
+        <NotificationPanel />
         <div className="topbar-user">
           <div className="topbar-avatar">{displayName.charAt(0).toUpperCase()}</div>
+          <span className="topbar-username">{displayName}</span>
         </div>
       </div>
     </header>

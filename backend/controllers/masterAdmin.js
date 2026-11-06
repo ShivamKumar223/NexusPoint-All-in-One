@@ -332,24 +332,25 @@ export const getTeamById = async (req, res) => {
 export const getAllProjects = async (req, res) => {
     try {
         const { organizationId, role } = req.user;
-        if (role !== "master-admin") {
+        if (role != "master-admin") {
             return res.status(403).json({
                 success: false,
                 message: "You are not authorized to access this resource",
             });
         }
         const projects = await Project.find({ organizationId });
-        if (!projects || projects.length === 0) {
+        if (!projects) {
             return res.status(404).json({
                 success: false,
-                message: "Projects not foun yet"
+                message: "Projects not foud yet"
             }
-            )
-        }
-        else {
+        )
+    }
+    else {
+            console.log("Admin projects : ", projects);
             return res.status(200).json({
                 success: true,
-                projects
+                data: projects
             })
         }
     }

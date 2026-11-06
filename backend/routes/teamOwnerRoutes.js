@@ -12,14 +12,13 @@ router.use(authMiddleware);
 router.get("/profile", getProfile);
 
 router.get("/modules", getMyModules);
-router.get("/module", updateModuleStatus);
+router.patch("/module/:moduleId", updateModuleStatus);
 
 router.post("/task/:moduleId", createTask);
 router.patch("/task/:taskId", updateTask);
-router.delete("/:task", deleteTask);
+router.delete("/task/:taskId", deleteTask);
 router.get("/tasks/:moduleId", getAllTasksByModoleId);
 
 router.get("/team", getMyTeams);
-
 
 export default router;
