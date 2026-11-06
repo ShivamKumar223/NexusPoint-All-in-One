@@ -6,10 +6,10 @@ const moduleEnrollmentSchema = new mongoose.Schema({
         ref : "Member",
         unique : true
     },
-    modules :[ {
-        type : mongoose.Schema.Types.ObjectId,
+    modules : {
+        type : [mongoose.Schema.Types.ObjectId],
         ref : "Module"
-    }]
+    }
 }, 
 {
     timestamps : true

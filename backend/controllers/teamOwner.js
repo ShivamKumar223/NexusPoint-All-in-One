@@ -41,12 +41,12 @@ export const  getProfile = async (req, res) =>{
 // Extract all Modules associated with a team owner
 export const getMyModules = async (req, res)=>{
     try{
-        const { role, id:memberId } = req.user;
-        if(!role || !memberId)
+        const { role, userId } = req.user;
+        if(!role || !userId)
         {
             return res.status(400).json({
                 success : false,
-                message : "Please provide role and memberId"
+                message : "Please provide role and userId"
             }) 
         }
         if(role !== "team-owner")
@@ -56,7 +56,7 @@ export const getMyModules = async (req, res)=>{
                 message: "Access denied. Only team owners can create tasks."
             })
         }
-        const myModules = await ModuleEnrollment.find({memberId}).populate("Module");
+        const myModules = await ModuleEnrollment.find({userId}).populate("Module").populate("Team").populate("Member", "name memberId role designation skills");
         if(!myModules)
         {
             return res.status(204).json({
@@ -119,8 +119,9 @@ export const createTask = async (req, res) => {
         const { members:taskMembers, id } = newTask;
         for(const member of taskMembers)
         {
-            TaskEnrollment.findById(member, {$push : {tasks: id}})
+           await TaskEnrollment.findByIdAndUpdate(member, {$addToSet : {tasks: id}})
         }
+
         return res.status(201).json({
             success: true,
             message: "Task created successfully.",
@@ -154,7 +155,7 @@ export const updateTask = async (req, res) => {
                 message: "Task ID is required."
             });
         }
-        const updatedTask = await Task.findByIdAndUpdate({ _id: taskId }, {
+        const updatedTask = await Task.findByIdAndUpdate({ id: taskId }, {
             taskName,
             description,
             members,
@@ -200,7 +201,7 @@ export const deleteTask = async (req, res) => {
                 message: "Task ID is required."
             });
         }
-        const deletedTask = await Task.findByIdAndDelete({ _id: taskId });
+        const deletedTask = await Task.findByIdAndDelete({ id: taskId });
 
         if (!deletedTask) {
             return res.status(400).json({
@@ -211,7 +212,7 @@ export const deleteTask = async (req, res) => {
         const { members:taskMembers, id} = deletedTask;
         for(const member of taskMembers)
         {
-            TaskEnrollment.findById(member, {$pull : {tasks: id}});
+           await TaskEnrollment.findById(member, {$pull : {tasks: id}});
         }
         return res.status(204).json({
             success: true,
@@ -245,7 +246,7 @@ export const getAllTasksByModoleId = async (req, res) => {
                 message: "Module ID is required."
             });
         }
-        const tasks = await Task.find({ moduleId });
+        const tasks = await Task.find({ moduleId }).populate("Member", "name memberId role designation skills");
         if (!tasks) {
             return res.status(404).json({
                 success: false,
@@ -270,7 +271,7 @@ export const getAllTasksByModoleId = async (req, res) => {
 // Extract the team associated with the team owner
 export const getMyTeams = async (req, res) => {
     try {
-        const { role, id: memberId } = req.user;
+        const { role, userId: memberId } = req.user;
 
         if (role !== "developer" && role !== "team-owner") {
             return res.status(403).json({
@@ -284,7 +285,7 @@ export const getMyTeams = async (req, res) => {
                 message: "Member ID is required."
             });
         }
-        const team = await TeamEnrollment.findOne({ memberId });
+        const team = await TeamEnrollment.findOne({ memberId }).populate("Member","name memberId role designation skills");
         if (!team) {
             return res.status(404).json({
                 success: false,
@@ -309,7 +310,7 @@ export const getMyTeams = async (req, res) => {
 // Update module status
 export const updateModuleStatus = async (req, res) => {
     try {
-        const { role, _id: memberId } = req.user;
+        const { role, userId: memberId } = req.user;
         const { moduleId } = req.params;
         const { newStatus } = req.body;
         if (!role || !memberId || !moduleId || !newStatus) {
@@ -324,7 +325,7 @@ export const updateModuleStatus = async (req, res) => {
                 message: "Access denied. Only developers can view their teams."
             });
         }
-        const updatedModule = await Module.findOneAndUpdate({ _id: moduleId }, { status: newStatus });
+        const updatedModule = await Module.findOneAndUpdate({ id: moduleId }, { status: newStatus });
         if (!updatedModule) {
             return res.status(404).json({
                 success: false,

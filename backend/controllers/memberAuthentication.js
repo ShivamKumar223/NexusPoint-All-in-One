@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 import Member from "../models/member.js";
 
-const generateToken = ({name, organizationId, _id : userId, memberId, role, designation, skills})=>{
+const generateToken = ({name, organizationId, id : userId, memberId, role, designation, skills})=>{
     const token =  jwt.sign(
         {
             name, organizationId, userId, memberId, role, designation, skills
@@ -42,10 +42,13 @@ export const loginMember = async (req, res)=>{
                     // sameSite: "strict",
                     maxAge: 24 * 60 * 60 * 1000
                 }
-               )
+               );
+
+               const {password:temp, ...user}= isUserExist;
                return res.status(200).json({
                  success : true,
-                 message : "Login successful"
+                 message : "Login successful",
+                 data : user
                })
             }
             else{
@@ -63,3 +66,64 @@ export const loginMember = async (req, res)=>{
         })
     }
 }
+
+// 
+// Change Password
+export const updatePassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+
+        // 1. Validate input
+        if (!newPassword) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        // 2. Find logged-in user
+        const user = await Member.findById(req.user.userId)
+            .select("+password");
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // 3. Verify old password
+        // const isMatch = await bcrypt.compare(
+        //     oldPassword,
+        //     user.password
+        // );
+
+        // if (!isMatch) {
+        //     return res.status(400).json({
+        //         message: "Incorrect old password"
+        //     });
+        // }
+
+        // 4. Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 5. Update password
+        // user.password = hashedPassword;
+        // await user.save();
+        await Member.findOneAndUpdate({id : req.user.userId},{password : hashedPassword})
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};

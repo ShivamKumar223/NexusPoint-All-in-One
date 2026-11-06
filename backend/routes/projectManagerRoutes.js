@@ -1,5 +1,5 @@
 import express from "express";
-import { loginMember } from "../controllers/memberAuthentication.js";
+import { loginMember, updatePassword } from "../controllers/memberAuthentication.js";
 import { authMiddleware } from "../middleware/tokenVerification.js";
 import {
     getProfile, getAllOrgMembers, getAllOrgTeams,
@@ -15,6 +15,7 @@ router.post("/login", loginMember);
 router.use(authMiddleware);
 
 router.get("/profile", getProfile);
+router.patch("/update-password", updatePassword);
 router.get("/org-members", getAllOrgMembers);
 router.get("/org-teams", getAllOrgTeams);
 

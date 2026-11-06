@@ -1,5 +1,5 @@
 import express from "express";
-import { loginOrganization, registerOrganization } from "../controllers/organizationAuthentication.js";
+import { loginOrganization, registerOrganization, updatePassword } from "../controllers/organizationAuthentication.js";
 import { createMember, deleteMember, getAllProjects, getAllTeams, getMembers, getProfile, getProjectById, getTeamById, updateMember } from "../controllers/masterAdmin.js";
 import { authMiddleware } from "../middleware/tokenVerification.js";
 
@@ -13,6 +13,8 @@ router.post("/login", loginOrganization);
 router.use(authMiddleware);    //middleware for verify token
 
 router.get("/profile", getProfile);
+
+router.patch("/update-password", updatePassword);
 
 router.get("/members", getMembers);
 router.post("/member", createMember);

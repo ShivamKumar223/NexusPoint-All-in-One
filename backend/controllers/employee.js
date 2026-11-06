@@ -7,19 +7,19 @@ import TeamEnrollment from "../models/teamEnrollment.js";
 
 // Get profile of Project Manager
 export const getProfile = async (req, res) =>{
-    const {organizationId, memberId, role:roleIs} = req.user;
+    const {organizationId, memberId, userId, role:roleIs} = req.user;
      if(roleIs != "developer")
         {
             return res.status(403).json(
                 {
-                    success : true,
+                    success : false,
                     message : "You are not authorized to access this resource",
                 }
             )
         }
 
     try{
-        const user = await Member.findOne({ organizationId, memberId }, { password : 0 });      
+        const user = await Member.findOne({ organizationId, memberId }, { password : 0 }).populate("Organization", "organizationName ownerName");      
         if(!user)
         {
             return res.status(404).json({
@@ -49,7 +49,7 @@ export const getProfile = async (req, res) =>{
 // Retrieve all tasks assigned to the employee
 export const getMyTasks = async (req, res) => {
   try {
-    const { role, id:memberId } = req.user;
+    const { role, userId, memberId } = req.user;
 
     if (role !== "developer") {
       return res.status(403).json({
@@ -67,7 +67,7 @@ export const getMyTasks = async (req, res) => {
     }
 
     const tasks = await TaskEnrollment.find({
-      memberId
+     id : userId
     })
     .populate("Task")
     .populate("Module")
@@ -99,7 +99,7 @@ export const getMyTasks = async (req, res) => {
 // Update the task status
 export const updateTaskStatus = async (req, res)=>{
   try{
-     const { role, id:memberId } = req.user;
+     const { role, userId, memberId } = req.user;
      const { taskId } = req.params;
      const { newStatus } = req.body;
      if(!role || !memberId || !taskId || !newStatus)
@@ -116,7 +116,7 @@ export const updateTaskStatus = async (req, res)=>{
         message: "Access denied. Only developers can update task status."
       });
      }
-     const updatedTask = await Task.findOneAndUpdate({_id:taskId},{status : newStatus});
+     const updatedTask = await Task.findOneAndUpdate({id:taskId},{status : newStatus});
      if(!updatedTask){
       return res.status(404).json({
         success : false,
@@ -144,7 +144,7 @@ export const updateTaskStatus = async (req, res)=>{
 // This function considers that one employee can be part of only one team at a time.
 export const getMyTeams = async (req, res)=>{
   try {
-  const { role, id: memberId } = req.user;
+  const { role, userId } = req.user;
 
   if(role !== "developer" && role !== "team-owner") {
     return res.status(403).json({
@@ -152,13 +152,13 @@ export const getMyTeams = async (req, res)=>{
       message: "Access denied. Only developers can view their teams."
     });
   } 
-  if(!memberId) {
+  if(!userId) {
     return res.status(400).json({
       success: false,
       message: "Member ID is required."
     });
   }
-  const team = await TeamEnrollment.findOne({ memberId });
+  const team = await TeamEnrollment.findOne({ userId }).populate("Team").populate("Member", "name memberId role designation skills");;
   if(!team) {
     return res.status(404).json({
       success: false,

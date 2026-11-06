@@ -5,7 +5,7 @@ import Project from "../models/project.js";
 
 // Show profile of the user(Admin)
 export const getProfile = async (req, res) =>{
-    const {organizationId, memberId, role:roleIs} = req.user;
+    const {organizationId,userId, memberId, role:roleIs} = req.user;
      if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -17,7 +17,7 @@ export const getProfile = async (req, res) =>{
         }
 
     try{
-        const user = await Member.findOne({ organizationId, memberId }, { password : 0 });      
+        const user = await Member.findOne({ organizationId, memberId }, { password : 0 }).populate("Organization", "organizationName ownerName");      
         if(!user)
         {
             return res.status(404).json({
@@ -84,7 +84,7 @@ export const getProfile = async (req, res) =>{
 // Create a new member in the organization
 export const createMember = async (req, res) =>{
     const {name, role, memberId, password, designation, skills} = req.body;
-    const {_id : organizationId, role : roleIs} = req.user;
+    const { organizationId, userId, role : roleIs} = req.user;
     if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -149,7 +149,7 @@ export const createMember = async (req, res) =>{
 
 // Extract all members of an organization
 export const getMembers = async (req, res) => {
-        const { _id:memberId, organizationId, role: roleIs } = req.user;
+        const { memberId, organizationId, role: roleIs } = req.user;
       if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -195,7 +195,7 @@ export const updateMember = async (req, res) =>{
         }
 
     try{
-                const updatedUser = await Member.findOneAndUpdate({ _id: req.params._id }, {name, role, designation, skills});
+                const updatedUser = await Member.findOneAndUpdate({ organizationId, memberId }, {name, role, designation, skills});
                 if(!updatedUser)
                 {
                     return res.status(404).json({
@@ -206,7 +206,7 @@ export const updateMember = async (req, res) =>{
                 return res.status(200).json({
                     success : true, 
                     message : "Update successful",
-                    updatedUser
+                    data : updatedUser
                 })
             
     }
@@ -222,7 +222,7 @@ export const updateMember = async (req, res) =>{
 // Delete existin member from organization
 export const deleteMember = async (req, res) =>{
     try{
-        const {memberId}  = req.params;
+        const { memberId }  = req.params;
         const { organizationId, id: userId, role} = req.user;
         if(role != "admin")
         {
@@ -233,14 +233,14 @@ export const deleteMember = async (req, res) =>{
                 }
             )
         }
-        const member = await Member.findOne(organizationId, memberId);
-        if(!member)
-        {
-            return res.status(404).json({
-                success : ture,
-                message : "User not found"
-            })
-        }
+        // const member = await Member.findOne(organizationId, memberId);
+        // if(!member)
+        // {
+        //     return res.status(404).json({
+        //         success : ture,
+        //         message : "User not found"
+        //     })
+        // }
         if(member.role == "admin" || member.role == "master-admin")
         {
             return res.status(403).json(
@@ -281,7 +281,7 @@ export const deleteMember = async (req, res) =>{
 
 // Extract all teams of an organization
 export const getAllTeams = async (req, res) => {
-    const { organizationId, role } = req.user;
+    const { organizationId, userId, role } = req.user;
 
     try{
         if(role !== "admin") {
@@ -290,24 +290,25 @@ export const getAllTeams = async (req, res) => {
                 message: "You are not authorized to access this resource",
             });
         }
-        if(!organizationId){
-            return res.status(400).json(
-            {
-                success : false,
-                message : "please provide organization Id"
-            })
-        }
+        // if(!organizationId){
+        //     return res.status(400).json(
+        //     {
+        //         success : false,
+        //         message : "please provide organization Id"
+        //     })
+        // }
 
-        const teams = await Team.find({ organizationId });
-        if(!teams || teams.length === 0){
+        const teams = await Team.find({ organizationId }).populate("Member", "name memberId role designation skills");
+        if(!teams){
             return res.status(404).json({
+                success : false,
                 message: "No teams found for this organization",
             });
         }
         else{
             return res.status(200).json({
                 success: true,
-                teams
+                data:teams
             });
     }
 }
@@ -321,10 +322,10 @@ catch(error){
 
 // Extract a team by its ID
 export const getTeamById = async (req, res) => {
-    const teamId = req.params._id;
+    const teamId = req.params.teamId;
 
     try{
-         const { id:memberId, organizationId, role: roleIs } = req.user;
+         const { memberId, organizationId, role: roleIs } = req.user;
       if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -334,7 +335,7 @@ export const getTeamById = async (req, res) => {
                 }
             )
         }
-        const team = await Team.findById(teamId);
+        const team = await Team.findById(teamId).populate("Member", "name memberId role designation skills");
         if(!team){
             return res.status(404).json({
                 message: "Team not found",
@@ -343,7 +344,7 @@ export const getTeamById = async (req, res) => {
         else{
             return res.status(200).json({
                 success: true,
-                team
+                data : team
             });
         }
     }
@@ -365,8 +366,8 @@ export const getAllProjects = async (req, res) => {
             message: "You are not authorized to access this resource",
         });
     }
-    const projects = await Project.find({ organizationId });
-    if(!projects || projects.length === 0){
+    const projects = await Project.find({ organizationId }).populate("Team").populate("Member", "name memberId role designation skills");
+    if(!projects){
         return res.status(404).json({
             success : false,
             message : "Projects not foun yet"
@@ -375,7 +376,7 @@ export const getAllProjects = async (req, res) => {
         else{
             return res.status(200).json({
                 success : true,
-                projects
+                data : projects
             })
         }
     }
@@ -390,7 +391,7 @@ export const getAllProjects = async (req, res) => {
 // Extract of an project in detail
 export const getProjectById = async (req, res) =>{
     try{
-         const { id:memberId, organizationId, role: roleIs } = req.user;
+         const { memberId, organizationId, role: roleIs } = req.user;
       if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -401,8 +402,8 @@ export const getProjectById = async (req, res) =>{
             )
         }
         
-        const projectId = req.params._id;
-        const project = await Project.findById(projectId);
+        const projectId = req.params.projectId;
+        const project = await Project.findById(projectId).populate("Team").populate("Member", "name memberId role designation skills");;
         if(!project){
             return res.status(404).json({
                 message: "Project not found",
@@ -411,7 +412,8 @@ export const getProjectById = async (req, res) =>{
         else{
             return res.status(200).json({
                 success: true,
-                project
+                message: "Success",
+                data:project
             });
         }
     }

@@ -43,7 +43,7 @@ export const registerOrganization = async (req, res) =>{
 
 
 // generate jwt token
-const generateToken = ({ _id : organizationId, organizationName, ownerName, email, role})=>{
+const generateToken = ({ id : organizationId, organizationName, ownerName, email, role})=>{
     const token = jwt.sign(
         { organizationId, organizationName, ownerName, email, role},
             process.env.JWT_SECRET,
@@ -74,10 +74,11 @@ export const loginOrganization = async(req, res) => {
                 // sameSite: "strict",
                 maxAge: 24 * 60 * 60 * 1000
             });
-
+            const {password : temp, ...user} = isExistUser;
             return res.status(200).json({
                 success :  true,
                 message: "Login successful",
+                data : user
             })
         }
         else{
@@ -103,3 +104,62 @@ export const loginOrganization = async(req, res) => {
 }
 
 
+// Change Password
+export const updatePassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+
+        // 1. Validate input
+        if (!newPassword) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        // 2. Find logged-in user
+        const user = await Organization.findById(req.user.userId)
+            .select("+password");
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // 3. Verify old password
+        // const isMatch = await bcrypt.compare(
+        //     oldPassword,
+        //     user.password
+        // );
+
+        // if (!isMatch) {
+        //     return res.status(400).json({
+        //         message: "Incorrect old password"
+        //     });
+        // }
+
+        // 4. Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 5. Update password
+        // user.password = hashedPassword;
+        // await user.save();
+        await Organization.findOneAndUpdate({id : req.user.userId},{password : hashedPassword})
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
