@@ -32,24 +32,29 @@ const ProjectList = () => {
 
   const fetchProjects = async () => {
     try {
-      const res = await api.get('/project-manager/projects');
+      let res;
+      if (role === 'master-Admin') res = await api.get('/master-admin/projects');
+      else if (role === 'admin') res = await api.get('/admin/projects');
+      else res = await api.get('/project-manager/projects');
       const projs = res.data?.data || [];
       setProjects(projs);
-      // Fetch module counts for progress
-      const counts = {};
-      await Promise.all(projs.map(async (p) => {
-        try {
-          const mRes = await api.get(`/project-manager/modules/${p._id}`);
-          const mods = mRes.data.data || [];
-          counts[p._id] = {
-            total: mods.length,
-            complete: mods.filter(m => m.status === 'complete').length
-          };
-        } catch {
-          counts[p._id] = { total: 0, complete: 0 };
-        }
-      }));
-      setModuleCounts(counts);
+      // Fetch module counts for progress (PM only — admin/master-admin may not have modules endpoint)
+      if (role === 'project-manager') {
+        const counts = {};
+        await Promise.all(projs.map(async (p) => {
+          try {
+            const mRes = await api.get(`/project-manager/modules/${p._id}`);
+            const mods = mRes.data.data || [];
+            counts[p._id] = {
+              total: mods.length,
+              complete: mods.filter(m => m.status === 'complete').length
+            };
+          } catch {
+            counts[p._id] = { total: 0, complete: 0 };
+          }
+        }));
+        setModuleCounts(counts);
+      }
     } catch {
       toast.error('Failed to load projects');
     } finally {

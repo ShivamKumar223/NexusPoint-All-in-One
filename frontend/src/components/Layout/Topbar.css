@@ -1,46 +1,89 @@
 .topbar {
-  position: sticky;
-  top: 0;
-  height: 60px;
-  background: var(--topbar-bg);
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  z-index: 50;
+  position: sticky; top: 0; height: 60px;
+  background: var(--topbar-bg); border-bottom: 1px solid var(--border-color);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem; z-index: 50;
 }
 .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
 .topbar-title { font-size: 1.15rem; font-weight: 600; }
 .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
-.topbar-user { display: flex; align-items: center; gap: 0.5rem; }
-.topbar-username {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+/* User area */
+.topbar-user-wrapper { position: relative; }
+.topbar-user-btn {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: none; border: none; cursor: pointer; padding: 0.25rem 0.4rem;
+  border-radius: 8px; transition: background 0.2s;
 }
+.topbar-user-btn:hover { background: var(--bg-hover); }
 .topbar-avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  flex-shrink: 0;
+  font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+}
+.topbar-username {
+  font-size: 0.85rem; font-weight: 500; color: var(--text-primary);
+  max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .topbar-menu-btn { display: none; }
 
-@media (max-width: 1024px) {
-  .topbar-menu-btn { display: flex; }
+/* Profile Panel */
+.profile-panel {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 310px; background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18); z-index: 200;
+  overflow: hidden; animation: fadeSlideDown 0.18s ease;
 }
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.profile-panel-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem; border-bottom: 1px solid var(--border-color);
+}
+.profile-avatar-lg {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.1rem;
+}
+.profile-panel-info { flex: 1; min-width: 0; }
+.profile-panel-name { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+.profile-panel-role { font-size: 0.75rem; color: var(--accent); font-weight: 500; }
+.profile-panel-org { font-size: 0.72rem; color: var(--text-muted); }
+
+.profile-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border-color);
+}
+.profile-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.6rem 0.5rem; border: none; background: none;
+  font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);
+  cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.profile-tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+.profile-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.profile-panel-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.profile-field {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 0.5rem; font-size: 0.82rem;
+}
+.profile-field-label {
+  display: flex; align-items: center; gap: 0.25rem;
+  color: var(--text-muted); font-size: 0.78rem; min-width: 90px; flex-shrink: 0;
+}
+.profile-field-value { color: var(--text-primary); font-weight: 500; text-align: right; word-break: break-all; }
+.profile-field-value.mono { font-family: monospace; font-size: 0.75rem; }
+
+@media (max-width: 1024px) { .topbar-menu-btn { display: flex; } }
 @media (max-width: 768px) {
   .topbar { padding: 0 1rem; }
   .topbar-title { font-size: 1rem; }
   .topbar-username { display: none; }
+  .profile-panel { width: 290px; right: -10px; }
 }

@@ -17,7 +17,7 @@ export const getProfile = async (req, res) =>{
         }
 
     try{
-        const user = await Member.findOne({ organizationId, memberId }, { password : 0 }).populate("Organization", "organizationName ownerName");      
+        const user = await Member.findOne({ organizationId, memberId },{password : 0}).populate("organizationId", "organizationName ownerName");
         if(!user)
         {
             return res.status(404).json({
@@ -25,8 +25,8 @@ export const getProfile = async (req, res) =>{
                 message : "User not found"
             })
         }
-        else{
-            return res.status(200).json({
+        else{      
+            return res.status(200).json({ 
                 success : true,
                 message : "Success",
                 data : user
@@ -35,9 +35,11 @@ export const getProfile = async (req, res) =>{
     }
     catch(error)
     {
+        console.log("Actual Error :", error.message)
         return res.status(500).json({
             success : false,
-            message : "Login failed due to server side error"
+            message : "Login failed due to server side error",
+            
         })
     }
 }
@@ -241,7 +243,7 @@ export const deleteMember = async (req, res) =>{
         //         message : "User not found"
         //     })
         // }
-        if(member.role == "admin" || member.role == "master-admin")
+        if(role != "admin")
         {
             return res.status(403).json(
                 {

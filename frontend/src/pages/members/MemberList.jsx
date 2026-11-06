@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import API from '../../api/axios';
 import SearchFilter from '../../components/common/SearchFilter';
 import Modal from '../../components/common/Modal';
-import { IoAdd, IoTrash, IoCreate } from 'react-icons/io5';
+import { IoAdd, IoTrash, IoCreate, IoEyeOutline } from 'react-icons/io5';
 import '../shared/Shared.css';
 
 const MemberList = () => {
@@ -92,6 +92,7 @@ const MemberList = () => {
                   <td>{m.skills?.slice(0, 3).join(', ')}{m.skills?.length > 3 ? '...' : ''}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button className="btn-icon" onClick={() => navigate(`/members/${m._id}`)} title="View"><IoEyeOutline size={16} /></button>
                       <button className="btn-icon" onClick={() => openEdit(m)} title="Edit"><IoCreate size={16} /></button>
                       <button className="btn-icon" onClick={() => handleDelete(m._id)} title="Delete" style={{ color: 'var(--danger)' }}><IoTrash size={16} /></button>
                     </div>

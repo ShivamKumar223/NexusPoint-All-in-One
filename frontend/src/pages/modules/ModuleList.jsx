@@ -149,7 +149,7 @@ const ModuleList = () => {
             </thead>
             <tbody>
               {filtered.map(mod => (
-                <tr key={mod._id}>
+                <tr key={mod._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/modules/${mod._id}`)}>
                   <td>
                     <div className="table-primary">{mod.moduleName}</div>
                     <div className="table-secondary">{mod.description}</div>
@@ -159,7 +159,7 @@ const ModuleList = () => {
                   <td><IoPeopleOutline size={13} /> {mod.teams?.length || 0}</td>
                   <td><IoCalendarOutline size={13} /> {mod.completeBy ? new Date(mod.completeBy).toLocaleDateString() : '—'}</td>
                   <td>
-                    <div className="action-btns">
+                    <div className="action-btns" onClick={e => e.stopPropagation()}>
                       {role === 'team-owner' && (
                         <button
                           className="btn btn-secondary btn-sm"

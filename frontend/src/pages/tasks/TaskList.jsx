@@ -49,15 +49,30 @@ const TaskList = () => {
           } catch { /* skip */ }
         }
         setTasks(allTasks);
-        // Get team members for assignment context
+        // Get team members for assignment context — returns array of teams
         try {
           const teamRes = await api.get('/team-owner/team');
-          setMyTeamMembers(teamRes.data.data?.members || []);
+          const teams = Array.isArray(teamRes.data.data) ? teamRes.data.data : [teamRes.data.data].filter(Boolean);
+          const allMems = [];
+          teams.forEach(t => (t?.members || []).forEach(m => {
+            if (!allMems.find(ex => String(ex._id) === String(m._id || m))) allMems.push(m);
+          }));
+          setMyTeamMembers(allMems);
         } catch { /* ignore */ }
       } else if (role === 'developer') {
-        // Developer sees tasks assigned to them via employee endpoint
+        // Developer: getMyTasks returns plain Task objects with moduleName injected
         const res = await api.get('/employee/tasks');
         setTasks(res.data.data || []);
+        // Get team members for name resolution
+        try {
+          const teamRes = await api.get('/employee/team');
+          const teams = Array.isArray(teamRes.data.data) ? teamRes.data.data : [teamRes.data.data].filter(Boolean);
+          const allMems = [];
+          teams.forEach(t => (t?.members || []).forEach(m => {
+            if (!allMems.find(ex => String(ex._id) === String(m._id || m))) allMems.push(m);
+          }));
+          setMyTeamMembers(allMems);
+        } catch { /* ignore */ }
       }
     } catch {
       toast.error('Failed to load tasks');
@@ -152,7 +167,8 @@ const TaskList = () => {
       ) : (
         <div className="card-grid">
           {filtered.map(task => (
-            <div key={task._id} className="item-card">
+            <div key={task._id} className="item-card" style={{ cursor: 'pointer' }}
+              onClick={() => navigate(`/tasks/${task._id}`)}>
               <div className="item-card-header">
                 <h3 className="item-card-title">{task.taskName}</h3>
                 <span className={`badge badge-${statusColor(task.status)}`}>{task.status || 'pending'}</span>
@@ -172,7 +188,7 @@ const TaskList = () => {
                   })}
                 </div>
               )}
-              <div className="item-card-actions">
+              <div className="item-card-actions" onClick={e => e.stopPropagation()}>
                 {(role === 'developer' || role === 'team-owner') && (
                   <button
                     className="btn btn-secondary btn-sm"

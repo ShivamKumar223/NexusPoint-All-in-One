@@ -25,18 +25,23 @@ const TeamList = () => {
       let res;
       if (role === 'project-manager') {
         res = await api.get('/project-manager/teams');
-      } else if (role === 'team-owner' || role === 'developer') {
+        setTeams(res.data.data || []);
+      } else if (role === 'team-owner') {
+        // Returns array of Team objects (after backend fix)
         res = await api.get('/team-owner/team');
-        // May return a single team or enrollment object
         const data = res.data.data;
-        setTeams(data ? (Array.isArray(data) ? data : [data]) : []);
-        setLoading(false);
-        return;
+        setTeams(Array.isArray(data) ? data : (data ? [data] : []));
+      } else if (role === 'developer') {
+        // Same endpoint format
+        res = await api.get('/employee/team');
+        const data = res.data.data;
+        setTeams(Array.isArray(data) ? data : (data ? [data] : []));
       } else {
-        // admin/master-admin: use admin endpoint
-        res = await api.get('/admin/teams');
+        // admin/master-admin
+        const endpoint = role === 'master-Admin' ? '/master-admin/teams' : '/admin/teams';
+        res = await api.get(endpoint);
+        setTeams(res.data.data || []);
       }
-      setTeams(res.data.data || []);
     } catch {
       toast.error('Failed to load teams');
     } finally {

@@ -24,15 +24,24 @@ const CreateTask = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // getMyModules now returns Module objects directly
         const modulesRes = await api.get('/team-owner/modules');
         setModules(modulesRes.data.data || []);
-        // Try to get team/member data via team endpoint
+
+        // Get teams (now returns array of Team objects with members)
         try {
           const teamRes = await api.get('/team-owner/team');
-          const teamData = teamRes.data.data;
-          // teamData might be an enrollment or team object — handle both
-          if (teamData && teamData.members) setAllOrgMembers(teamData.members);
-          if (teamData && Array.isArray(teamData)) setAllOrgTeams(teamData);
+          const teamsData = teamRes.data.data;
+          const teamsArr = Array.isArray(teamsData) ? teamsData : (teamsData ? [teamsData] : []);
+          setAllOrgTeams(teamsArr);
+          // Collect all members from all teams (deduplicated)
+          const allMems = [];
+          teamsArr.forEach(t => {
+            (t.members || []).forEach(m => {
+              if (!allMems.find(ex => String(ex._id) === String(m._id || m))) allMems.push(m);
+            });
+          });
+          setAllOrgMembers(allMems);
         } catch { /* ignore */ }
       } catch {
         toast.error('Failed to load modules');
@@ -50,13 +59,14 @@ const CreateTask = () => {
     try {
       const mod = modules.find(m => String(m._id) === selectedModuleId);
       if (!mod || !mod.teams || mod.teams.length === 0) {
-        // Fall back to team members if available
+        // Fall back to all team members
         setModuleMembers(allOrgMembers || []);
       } else {
         // Find members from module's teams in allOrgTeams
         const members = [];
-        mod.teams.forEach(teamId => {
-          const team = allOrgTeams.find(t => String(t._id) === String(teamId._id || teamId));
+        mod.teams.forEach(teamRef => {
+          const teamId = typeof teamRef === 'object' ? String(teamRef._id || teamRef) : String(teamRef);
+          const team = allOrgTeams.find(t => String(t._id) === teamId);
           if (team?.members) {
             team.members.forEach(m => {
               if (!members.find(ex => String(ex._id) === String(m._id || m))) {
