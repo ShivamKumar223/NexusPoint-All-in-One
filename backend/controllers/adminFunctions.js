@@ -88,6 +88,7 @@ export const getProfile = async (req, res) =>{
 export const createMember = async (req, res) =>{
     const {name, role, memberId, password, designation, skills} = req.body;
     const { organizationId, userId, role : roleIs} = req.user;
+    console.log(role, roleIs);
     if(roleIs != "admin")
         {
             return res.status(403).json(
@@ -187,7 +188,7 @@ export const updateMember = async (req, res) =>{
     const { memberId } = req.params;
     const { name, role, designation, skills } = req.body;
     const {organizationId, role : roleIs} = req.user;
-    if(roleIs != "admin" || role == "admin" || role != "master-admin")
+    if(roleIs != "admin" || role == "admin" || role == "master-admin")
         {
             return res.status(403).json(
                 {

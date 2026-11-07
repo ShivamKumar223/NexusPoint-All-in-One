@@ -24,6 +24,7 @@ export const loginMember = async (req, res)=>{
         const { organizationId, memberId, password } = req.body;
 
         const isUserExist = await Member.findOne({organizationId, memberId});
+        // console.log(isUserExist);
         if(!isUserExist)
         {
             return res.status(404).json({

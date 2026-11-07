@@ -61,8 +61,7 @@ const Sidebar = () => {
       {sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-brand">
-          <IoCodeSlash className="brand-icon" />
-          <span className="brand-text">Smart DevColab</span>
+          <img src="/icon3.png" alt="" style={{ height:"50px"}} /><span className="brand-text">NexusPoint</span>
           <button className="sidebar-close-btn" onClick={closeSidebar}><IoClose size={20} /></button>
         </div>
         <nav className="sidebar-nav">

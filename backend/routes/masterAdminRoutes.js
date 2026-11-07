@@ -25,7 +25,7 @@ router.get("/teams", getAllTeams);
 router.get("/team/:teamId", getTeamById);
 
 router.get("/projects", getAllProjects);
-router.get("/project/:projectId", getProjectById);
+router.get("/project/:organizationId", getProjectById);
 
 
 export default router;

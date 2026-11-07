@@ -10,6 +10,7 @@ import './Dashboard.css';
 
 const ProjectManagerDashboard = () => {
   const { user } = useAuth();
+  // console.log(user);
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [teams, setTeams] = useState([]);

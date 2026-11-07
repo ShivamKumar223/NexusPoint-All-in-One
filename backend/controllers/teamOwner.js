@@ -12,10 +12,11 @@ import Team from "../models/team.js";
 export const getProfile = async (req, res) => {
     try {
         const { organizationId, memberId, role: roleIs } = req.user;
+        console.log(roleIs);
         if (roleIs !== "team-owner") {
             return res.status(403).json({ success: false, message: "You are not authorized to access this resource" });
         }
-        const user = await Member.findOne({ organizationId, memberId }, { password: 0 });
+        const user = await Member.findOne({ organizationId, memberId }, { password: 0 }).populate("organizationId");
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -46,7 +47,7 @@ export const getMyModules = async (req, res) => {
         //         ]
         //     });
         const enrollment = await ModuleEnrollment.findOne({ memberId: userId }).populate("modules");
-        console.log("enrollment : " ,enrollment);
+        // console.log("enrollment : " ,enrollment);
         if (!enrollment) {
             return res.status(200).json({ success: true, message: "No module enrollment found.", data: [] });
         }
@@ -69,23 +70,40 @@ export const createTask = async (req, res) => {
         if (!moduleId || !taskName || !description || !members || !completeBy) {
             return res.status(400).json({ success: false, message: "taskName, description, members and completeBy are required." });
         }
+        const existingTask = await Task.findOne({ moduleId, taskName });
+                if (existingTask) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "A Task with this name already exists in the project"
+                    });
+                }
+                const newTask = await Task.create({ moduleId, taskName, description, members: members || [], completeBy });
+                if (!newTask) {
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to create module"
+                    });
+                }
+                
+                const { members:memberIds, _id: taskId } = newTask;
+        await Promise.all(
+            memberIds.map(memberId =>
+                TaskEnrollment.findOneAndUpdate(
+                    { memberId },
+                    { $addToSet: { tasks: taskId } },
+                    { upsert: true, new: true }
+                )
+            )
+        );
 
-        const newTask = await Task.create({ moduleId, taskName, description, members, completeBy });
-
-        if (!newTask) {
-            return res.status(400).json({ success: false, message: "Task creation failed." });
-        }
-        const { members:taskMembers, id: taskId } = newTask;
-        for(const member of taskMembers)
-        {
-            await TaskEnrollment.findOneAndUpdate({memberId:member}, {$addToSet:{tasks: taskId}},{ upsert: true });
-        }
         return res.status(201).json({ 
             success: true, 
             message: "Task created successfully.", 
             data: newTask 
         });
-    } catch (error) {
+    } catch (error) 
+    {
+        console.log("actual error :", error)
         return res.status(500).json({ 
             success: false, 
             message: "Internal Server Error", 

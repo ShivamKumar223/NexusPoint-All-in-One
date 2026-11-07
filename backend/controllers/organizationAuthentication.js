@@ -123,7 +123,7 @@ export const updatePassword = async (req, res) => {
         }
 
         // 2. Find logged-in user
-        const user = await Organization.findById(req.user.userId)
+        const user = await Organization.findById(req.user.organizationId)
             .select("+password");
 
         if (!user) {

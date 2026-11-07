@@ -16,11 +16,12 @@ export const getProfile = async (req, res) => {
         });
     }
     try {
-        const user = await Member.findOne({ organizationId, memberId }, { password: 0 });
+        const user = await Member.findOne({ organizationId, memberId }, { password: 0 }).populate("organizationId");
+        // console.log(user);
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: "User not found."
             });
         }
         return res.status(200).json({

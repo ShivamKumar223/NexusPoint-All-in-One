@@ -62,7 +62,7 @@ const TaskList = () => {
       } else if (role === 'developer') {
         // Developer: getMyTasks returns plain Task objects with moduleName injected
         const res = await api.get('/employee/tasks');
-        setTasks(res.data.data || []);
+        setTasks(res.data.data.tasks || []);
         // Get team members for name resolution
         try {
           const teamRes = await api.get('/employee/team');
@@ -168,7 +168,8 @@ const TaskList = () => {
         <div className="card-grid">
           {filtered.map(task => (
             <div key={task._id} className="item-card" style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/tasks/${task._id}`)}>
+              >
+                {/* onClick={() => navigate(`/tasks/${task._id}`)} */}
               <div className="item-card-header">
                 <h3 className="item-card-title">{task.taskName}</h3>
                 <span className={`badge badge-${statusColor(task.status)}`}>{task.status || 'pending'}</span>
@@ -184,7 +185,7 @@ const TaskList = () => {
                   {task.members.map((m, i) => {
                     const id = typeof m === 'object' ? String(m._id) : String(m);
                     const name = typeof m === 'object' ? m.name : getMemberName(id);
-                    return <span key={i} className="member-chip">{name.charAt(0).toUpperCase()}{name.slice(1, 8)}</span>;
+                    return <span key={i} className="member-chip">{name.charAt(0).toUpperCase()}{name.slice(1, 1)}</span>;
                   })}
                 </div>
               )}

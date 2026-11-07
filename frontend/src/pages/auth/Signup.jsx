@@ -28,7 +28,7 @@ const Signup = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-brand"><IoCodeSlash /><span>Smart DevColab</span></div>
+        <div className="auth-brand"><img src="/icon3.png" alt="" style={{ height:"50px"}} /><span>NexusPoint</span></div>
         <h1>Register Organization</h1>
         <p className="auth-subtitle">Create your organization as Master Admin</p>
         {error && <div className="auth-error">{error}</div>}

@@ -5,6 +5,7 @@ import Task from "../models/task.js";
 import TaskEnrollment from "../models/taskEnrollment.js";
 import TeamEnrollment from "../models/teamEnrollment.js";
 import Module from "../models/module.js";
+import mongoose from "mongoose";
 
 // Get profile of employee (developer)
 export const getProfile = async (req, res) => {
@@ -13,7 +14,7 @@ export const getProfile = async (req, res) => {
     return res.status(403).json({ success: false, message: "You are not authorized to access this resource" });
   }
   try {
-    const user = await Member.findOne({ organizationId, memberId }, { password: 0 });
+    const user = await Member.findOne({ organizationId, memberId }, { password: 0 }).populate("organizationId");
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -28,7 +29,7 @@ export const getProfile = async (req, res) => {
 export const getMyTasks = async (req, res) => {
   try {
     const { role, userId } = req.user;
-
+    // console.log(req.user);
     if (role !== "developer") {
       return res.status(403).json({ success: false, message: "Access denied. Only employees can view their tasks." });
     }
@@ -36,30 +37,28 @@ export const getMyTasks = async (req, res) => {
       return res.status(400).json({ success: false, message: "User ID is required" });
     }
 
+     const memberId = new mongoose.Types.ObjectId(userId);
+     console.log(userId);
     // Find the TaskEnrollment doc for this member and populate the tasks array
-    const enrollment = await TaskEnrollment.findOne({ memberId: userId })
+    const enrollment = await TaskEnrollment.findOne({ memberId })
       .populate({
         path: "tasks",
         populate: { path: "moduleId", model: "Module", select: "moduleName" }
       });
 
+      console.log(" Enrollment : ",enrollment);
     if (!enrollment) {
       return res.status(200).json({ success: true, message: "No tasks found.", data: [] });
     }
 
-    // Map tasks to include module name for convenience
-    const tasks = (enrollment.tasks || []).map(t => ({
-      ...t.toObject(),
-      moduleName: t.moduleId?.moduleName || null,
-    }));
-
     return res.status(200).json({
       success: true,
       message: "Tasks retrieved successfully.",
-      data: tasks
+      data: enrollment
     });
 
   } catch (error) {
+    console.log("Actual Server Error", error);
     return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
   }
 };

@@ -19,7 +19,7 @@ const CategoryPage = () => {
   return (
     <div className="category-page">
       <div className="category-content">
-        <div className="auth-brand"><IoCodeSlash /><span>Smart DevColab</span></div>
+        <div className="auth-brand"><img src="/icon3.png" alt="" style={{ height:"50px"}} /><span>NexusPoint</span></div>
         <h1>Welcome</h1>
         <p>Choose your role to continue</p>
         <div className="role-grid">

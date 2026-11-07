@@ -54,7 +54,7 @@ const MemberList = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await API.patch(`/${role}/member/${editModal.member.id}`, {
+      await API.patch(`/${role}/member/${editModal.member._id}`, {
         name: editForm.name, designation: editForm.designation,
         skills: editForm.skills.split(',').map(s => s.trim()).filter(Boolean),
       });

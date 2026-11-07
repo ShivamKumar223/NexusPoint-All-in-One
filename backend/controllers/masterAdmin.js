@@ -253,7 +253,7 @@ export const getAllTeams = async (req, res) => {
     const { organizationId, role: roleIs } = req.user;
 
     try {
-        if (roleIs !== "master-admin") {
+        if (roleIs != "master-admin") {
             return res.status(403).json({
                 success: false,
                 message: "You are not authorized to access this resource",
@@ -267,7 +267,7 @@ export const getAllTeams = async (req, res) => {
                 })
         }
 
-        const teams = await Team.find({ organizationId }).populate("Member", "name memberId role designation skills");;
+        const teams = await Team.find({ organizationId }).populate("members", "name memberId role designation skills");;
         if (!teams) {
             return res.status(404).json({
                 success : false,
@@ -301,7 +301,7 @@ export const getTeamById = async (req, res) => {
     }
 
     try {
-        const team = await Team.findById(teamId).populate("Member", "name memberId role designation skills");;
+        const team = await Team.findById(teamId).populate("members", "name memberId role designation skills");;
         if (!team) {
             return res.status(404).json({
                 message: "Team not found",
@@ -333,7 +333,7 @@ export const getAllProjects = async (req, res) => {
                 message: "You are not authorized to access this resource",
             });
         }
-        const projects = await Project.find({ organizationId }).populate("Team").populate("Member", "name memberId role designation skills");;
+        const projects = await Project.find({ organizationId }).populate("teams");
         if (!projects) {
             return res.status(404).json({
                 success: false,
@@ -368,7 +368,7 @@ export const getProjectById = async (req, res) => {
                 message: "You are not authorized to access this resource",
             });
         }
-        const project = await Project.findById(projectId).populate("Team").populate("Member", "name memberId role designation skills");;
+        const project = await Project.findById(projectId).populate("teams");
         if (!project) {
             return res.status(404).json({
                 message: "Project not found",

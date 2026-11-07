@@ -22,8 +22,8 @@ const DeveloperDashboard = () => {
           API.get('/employee/tasks').catch(() => ({ data: { data: [] } })),
           API.get('/employee/team').catch(() => ({ data: { data: [] } })),
         ]);
-        setTasks(taskRes.data.data || taskRes.data.tasks || []);
-        setTeams(teamRes.data.data || teamRes.data.teams || []);
+        setTasks(taskRes.data.data.tasks || taskRes.data.tasks || []);
+        setTeams(teamRes.data.data.teams || teamRes.data.teams || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };

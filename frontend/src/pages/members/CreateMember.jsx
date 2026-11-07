@@ -4,9 +4,13 @@ import { toast } from 'react-toastify';
 import API from '../../api/axios';
 import { IoArrowBack } from 'react-icons/io5';
 import '../shared/Shared.css';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateMember = () => {
   const navigate = useNavigate();
+  const { getRole } = useAuth();
+  const [role, setRole] = useState(()=>getRole());
+  // console.log(role)
   const [form, setForm] = useState({ name: '', role: 'developer', memberId: '', password: '', designation: '', skills: '' });
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +20,7 @@ const CreateMember = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await API.post('/master-admin/member', {
+      await API.post(`/${role}/member`, {
         name: form.name, role: form.role, memberId: form.memberId,
         password: form.password, designation: form.designation,
         skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),

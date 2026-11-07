@@ -4,6 +4,7 @@ import './OrgInfo.css';
 
 const OrgInfo = () => {
   const { user, getRole } = useAuth();
+  console.log(user);
   if (!user) return null;
 
   const role = getRole();
@@ -18,7 +19,7 @@ const OrgInfo = () => {
       <div className="org-info-body">
         <div className="org-info-row">
           <span className="org-info-label"><IoBusiness size={14} /> Organization</span>
-          <span className="org-info-value">{user.organizationName || 'N/A'}</span>
+          <span className="org-info-value">{user.organizationId.organizationName || 'N/A'}</span>
         </div>
         {!isMasterAdmin && (
           <>
