@@ -3,15 +3,15 @@ import bcrypt from "bcryptjs";
 
 import Member from "../models/member.js";
 
-const generateToken = ({name, organizationId, id : userId, memberId, role, designation, skills})=>{
-    const token =  jwt.sign(
+const generateToken = ({ name, organizationId, id: userId, memberId, role, designation, skills }) => {
+    const token = jwt.sign(
         {
             name, organizationId, userId, memberId, role, designation, skills
         },
-         process.env.JWT_SECRET,
-         {
-            expiresIn : "1d"
-         }
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "1d"
+        }
     );
 
     return token;
@@ -19,51 +19,46 @@ const generateToken = ({name, organizationId, id : userId, memberId, role, desig
 
 
 // login member
-export const loginMember = async (req, res)=>{
-    try{
+export const loginMember = async (req, res) => {
+    try {
         const { organizationId, memberId, password } = req.body;
 
-        const isUserExist = await Member.findOne({organizationId, memberId});
+        const isUserExist = await Member.findOne({ organizationId, memberId });
         // console.log(isUserExist);
-        if(!isUserExist)
-        {
+        if (!isUserExist) {
             return res.status(404).json({
-                message : "User not exist"
+                message: "User not exist"
             })
         }
-        else{
+        else {
             const isPasswordCorrect = await bcrypt.compare(password, isUserExist.password);
-            if(isPasswordCorrect)
-            {
-               const token = generateToken(isUserExist);
-               res.cookie("token", token, 
-                {
-                     httpOnly: true,                  //cookie sirf HTTPS connection par browser se server ko send hogi
-                    // secure: process.env.NODE_ENV === "production",
-                    // sameSite: "strict",
+            if (isPasswordCorrect) {
+                const token = generateToken(isUserExist);
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: true,      // HTTPS mandatory for cross-site deployment
+                    sameSite: "none",  // Cross-domain delivery allow karne ke liye "none" hona zaroori hai
                     maxAge: 24 * 60 * 60 * 1000
-                }
-               );
+                });
 
-               const {password:temp, ...user}= isUserExist;
-               return res.status(200).json({
-                 success : true,
-                 message : "Login successful",
-                 data : user
-               })
+                const { password: temp, ...user } = isUserExist;
+                return res.status(200).json({
+                    success: true,
+                    message: "Login successful",
+                    data: user
+                })
             }
-            else{
+            else {
                 return res.status(401).json({
-                    message : "Invalid Id or password"
+                    message: "Invalid Id or password"
                 })
             }
         }
     }
-    catch(error)
-    {
+    catch (error) {
         return res.status(500).json({
-            success : false,
-            message : "Login failed"
+            success: false,
+            message: "Login failed"
         })
     }
 }
@@ -115,7 +110,7 @@ export const updatePassword = async (req, res) => {
         // 5. Update password
         // user.password = hashedPassword;
         // await user.save();
-        await Member.findOneAndUpdate({id : req.user.userId},{password : hashedPassword})
+        await Member.findOneAndUpdate({ id: req.user.userId }, { password: hashedPassword })
 
         return res.status(200).json({
             success: true,

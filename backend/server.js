@@ -17,11 +17,13 @@ const app = express();
 app.use(express.json());  //This middleware is used to parse incoming JSON request bodies.
 
 
-const allowedOrigins = ['https://nexuspointtt.netlify.app', 'http://localhost:5173'];
+// const allowedOrigins = ['https://nexuspointtt.netlify.app', 'http://localhost:5173'];
 
 app.use(cors({
-    origin: allowedOrigins,
-    credentials: true 
+    origin: "https://nexuspointtt.netlify.app",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"] 
 }));
 
 
