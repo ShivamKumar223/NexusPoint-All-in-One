@@ -24,13 +24,14 @@ import {
   FaExternalLinkAlt,
   FaComments,
   FaPaperPlane,
-  FaUsers,
-  FaFolderOpen
+  FaBars,
+  FaTimes
 } from "react-icons/fa";
 
 export default function NexusPointLanding() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedRole, setSelectedRole] = useState("MasterAdmin");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Interactive Preview State (Hero Section)
   const [activeKanbanTab, setActiveKanbanTab] = useState("In Progress");
@@ -123,7 +124,7 @@ export default function NexusPointLanding() {
 
   const sampleKanbanTasks = [
     { title: "JWT HTTP-Only Auth", role: "Dev", priority: "High", status: "In Progress" },
-    { title: "RBAC Middleware Security", role: "Admin", priority: "Critical", status: "In Progress" },
+    { title: "RBAC Security Middleware", role: "Admin", priority: "Critical", status: "In Progress" },
     { title: "Socket.IO Messaging Stream", role: "Dev", priority: "High", status: "Review" },
     { title: "Multi-tenant Org Schema", role: "PM", priority: "Medium", status: "Completed" },
     { title: "Netlify Single-Page Redirects", role: "Dev", priority: "High", status: "Completed" }
@@ -139,6 +140,8 @@ export default function NexusPointLanding() {
     setNewMessage("");
   };
 
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
   return (
     <div style={styles.pageContainer}>
       <style>{styles.embeddedCSS}</style>
@@ -151,32 +154,60 @@ export default function NexusPointLanding() {
             <span style={styles.logoText}>NexusPoint</span>
           </div>
 
-          <div style={styles.navLinks}>
-            <a href="#features" onClick={() => setActiveTab("overview")} style={styles.navLink}>Workflow</a>
-            <a href="#roles" onClick={() => setActiveTab("roles")} style={styles.navLink}>Roles</a>
-            <a href="#tech" onClick={() => setActiveTab("tech")} style={styles.navLink}>Tech Stack</a>
-            <a href="#roadmap" onClick={() => setActiveTab("roadmap")} style={styles.navLink}>Future Roadmap</a>
+          {/* DESKTOP NAV LINKS */}
+          <div className="np-desktop-nav" style={styles.navLinks}>
+            <a href="#interactive-section" onClick={() => { setActiveTab("overview"); closeMobileMenu(); }} style={styles.navLink}>Workflow</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("roles"); closeMobileMenu(); }} style={styles.navLink}>Roles</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("tech"); closeMobileMenu(); }} style={styles.navLink}>Tech Stack</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("roadmap"); closeMobileMenu(); }} style={styles.navLink}>Future Roadmap</a>
           </div>
 
           <a
             href={LIVE_PROJECT_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="np-btn-primary"
+            className="np-btn-primary np-desktop-cta"
             style={styles.navCtaBtn}
           >
             <FaRocket />
             <span>Launch App</span>
           </a>
+
+          {/* MOBILE HAMBURGER BUTTON */}
+          <button
+            className="np-mobile-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={styles.hamburgerBtn}
+          >
+            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+          </button>
         </div>
+
+        {/* MOBILE DROPDOWN MENU */}
+        {isMobileMenuOpen && (
+          <div style={styles.mobileDropdown}>
+            <a href="#interactive-section" onClick={() => { setActiveTab("overview"); closeMobileMenu(); }} style={styles.mobileNavLink}>Workflow</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("roles"); closeMobileMenu(); }} style={styles.mobileNavLink}>Roles</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("tech"); closeMobileMenu(); }} style={styles.mobileNavLink}>Tech Stack</a>
+            <a href="#interactive-section" onClick={() => { setActiveTab("roadmap"); closeMobileMenu(); }} style={styles.mobileNavLink}>Future Roadmap</a>
+            <a
+              href={LIVE_PROJECT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.mobileCtaBtn}
+              onClick={closeMobileMenu}
+            >
+              <FaRocket /> Launch Live App
+            </a>
+          </div>
+        )}
       </nav>
 
       {/* HERO SECTION */}
       <header style={styles.heroHeader}>
         <div style={styles.badgeContainer}>
-          {/* <span style={styles.pingDot}>
-          </span> */}
-            <img src="icon3.png" width="50px"/>
+          {/* <span style={styles.pingDot}></span> */}
+          <img src="icon3.png" width="50px"/>
           NexusPoint
         </div>
 
@@ -215,13 +246,11 @@ export default function NexusPointLanding() {
           </button>
         </div>
 
-        {/* INTERACTIVE PRODUCT PREVIEW (KANBAN + SOCKET CHAT DEMO) */}
-        
+       
       </header>
 
-      {/* DOCUMENTATION & ARCHITECTURE TABS SECTION */}
+      {/* DOCUMENTATION TABS SECTION */}
       <section id="interactive-section" style={styles.mainSection}>
-        {/* TAB NAVIGATION BAR */}
         <div style={styles.tabNav}>
           {[
             { id: "overview", label: "Workflow & Hierarchy", icon: <FaProjectDiagram /> },
@@ -300,8 +329,8 @@ export default function NexusPointLanding() {
 
         {/* TAB 2: ROLES & RESPONSIBILITIES */}
         {activeTab === "roles" && (
-          <div className="np-fade-in" style={{ ...styles.rolesContainer, marginTop: "32px" }}>
-            <div style={styles.roleSidebar}>
+          <div className="np-fade-in np-roles-wrapper" style={{ ...styles.rolesContainer, marginTop: "32px" }}>
+            <div style={styles.roleSidebar} className="np-role-sidebar">
               <h3 style={styles.sidebarTitle}>Select User Role</h3>
               {Object.keys(roleData).map((roleKey) => {
                 const role = roleData[roleKey];
@@ -499,7 +528,7 @@ const styles = {
     position: "sticky",
     top: 0,
     zIndex: 50,
-    backgroundColor: "rgba(2, 6, 23, 0.85)",
+    backgroundColor: "rgba(2, 6, 23, 0.9)",
     backdropFilter: "blur(16px)",
     borderBottom: "1px solid #1e293b"
   },
@@ -518,7 +547,7 @@ const styles = {
   },
   logoText: {
     fontSize: "1.25rem",
-    fontWeight: 800,
+    fontWeight: 600,
     color: "#ffffff",
     letterSpacing: "-0.025em"
   },
@@ -547,6 +576,41 @@ const styles = {
     textDecoration: "none",
     boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)"
   },
+  hamburgerBtn: {
+    background: "transparent",
+    border: "none",
+    color: "#ffffff",
+    fontSize: "1.25rem",
+    cursor: "pointer",
+    display: "none"
+  },
+  mobileDropdown: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    padding: "16px 24px 24px 24px",
+    backgroundColor: "#090d16",
+    borderBottom: "1px solid #1e293b"
+  },
+  mobileNavLink: {
+    color: "#cbd5e1",
+    textDecoration: "none",
+    fontSize: "1rem",
+    fontWeight: 600
+  },
+  mobileCtaBtn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "12px",
+    borderRadius: "8px",
+    backgroundColor: "#0891b2",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontWeight: 700,
+    marginTop: "8px"
+  },
   heroHeader: {
     maxWidth: "1280px",
     margin: "0 auto",
@@ -559,7 +623,7 @@ const styles = {
     gap: "10px",
     padding: "6px 16px",
     borderRadius: "9999px",
-    backgroundColor: "rgba(6, 182, 212, 0.1)",
+    // backgroundColor: "rgba(6, 182, 212, 0.1)",
     border: "1px solid rgba(6, 182, 212, 0.3)",
     color: "#22d3ee",
     fontSize: "0.875rem",
@@ -573,12 +637,12 @@ const styles = {
     backgroundColor: "#22d3ee"
   },
   heroTitle: {
-    fontSize: "clamp(2.5rem, 6vw, 4rem)",
-    fontWeight: 400,
+    fontSize: "clamp(2.2rem, 5.5vw, 4rem)",
+    fontWeight: 500,
     letterSpacing: "-0.03em",
     color: "#ffffff",
     margin: "0 0 20px 0",
-    lineHeight: 1
+    lineHeight: 1.15
   },
   gradientText: {
     background: "linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)",
@@ -668,7 +732,7 @@ const styles = {
   },
   previewBodyGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: "16px",
     padding: "20px"
   },
@@ -1086,8 +1150,24 @@ const styles = {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+
+    /* MEDIA QUERIES FOR MOBILE RESPONSIVENESS */
     @media (max-width: 768px) {
-      .np-chevron { display: none !important; }
+      .np-desktop-nav, .np-desktop-cta {
+        display: none !important;
+      }
+      .np-mobile-toggle {
+        display: block !important;
+      }
+      .np-chevron {
+        display: none !important;
+      }
+      .np-roles-wrapper {
+        flex-direction: column !important;
+      }
+      .np-role-sidebar {
+        width: 100% !important;
+      }
     }
   `
 };
