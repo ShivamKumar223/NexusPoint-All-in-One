@@ -21,12 +21,25 @@ import {
   FaServer,
   FaDesktop,
   FaRocket,
-  FaExternalLinkAlt
+  FaExternalLinkAlt,
+  FaComments,
+  FaPaperPlane,
+  FaUsers,
+  FaFolderOpen
 } from "react-icons/fa";
 
-export default function NexusPointPortfolio() {
+export default function NexusPointLanding() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedRole, setSelectedRole] = useState("MasterAdmin");
+  
+  // Interactive Preview State (Hero Section)
+  const [activeKanbanTab, setActiveKanbanTab] = useState("In Progress");
+  const [chatMessages, setChatMessages] = useState([
+    { sender: "Priya (PM)", text: "Hey team, auth module is deployed on Render!", time: "10:42 AM" },
+    { sender: "Rohan (Lead)", text: "Awesome! Checking CORS & Cookie headers now.", time: "10:44 AM" },
+    { sender: "Shivam (Dev)", text: "Socket.IO real-time notification stream is active.", time: "10:45 AM" }
+  ]);
+  const [newMessage, setNewMessage] = useState("");
 
   const LIVE_PROJECT_URL = "https://nexuspointtt.netlify.app/";
 
@@ -37,8 +50,7 @@ export default function NexusPointPortfolio() {
       badge: "System Superuser",
       gradient: "linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(236, 72, 153, 0.05))",
       borderColor: "rgba(239, 68, 68, 0.4)",
-      description:
-        "Has complete control over the application, organization structure, and top-level administrative operations.",
+      description: "Has complete control over the application, organization structure, and top-level administrative operations.",
       responsibilities: [
         "Full system access and global organization administration",
         "Manage top-level platform configurations and permissions",
@@ -53,8 +65,7 @@ export default function NexusPointPortfolio() {
       badge: "Org Management",
       gradient: "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(99, 102, 241, 0.05))",
       borderColor: "rgba(168, 85, 247, 0.4)",
-      description:
-        "Manages organization members, credentials, and oversees project manager assignments.",
+      description: "Manages organization members, credentials, and oversees project manager assignments.",
       responsibilities: [
         "Create & manage Member credentials (Member ID + Password generation)",
         "Assign and update user roles (Project Manager, Team Owner, Developer)",
@@ -69,8 +80,7 @@ export default function NexusPointPortfolio() {
       badge: "Project Owner",
       gradient: "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.05))",
       borderColor: "rgba(59, 130, 246, 0.4)",
-      description:
-        "Drives project execution by defining modules, creating projects, and assigning Team Owners.",
+      description: "Drives project execution by defining modules, creating projects, and assigning Team Owners.",
       responsibilities: [
         "Create projects and define functional project modules",
         "Assign Team Owners to specific modules and workflows",
@@ -85,8 +95,7 @@ export default function NexusPointPortfolio() {
       badge: "Team Lead",
       gradient: "linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.05))",
       borderColor: "rgba(16, 185, 129, 0.4)",
-      description:
-        "Leads execution teams, breaks modules into actionable tasks, and manages developers.",
+      description: "Leads execution teams, breaks modules into actionable tasks, and manages developers.",
       responsibilities: [
         "Assign granular tasks to developers with priority levels",
         "Review task submissions (Review state → Complete state)",
@@ -101,8 +110,7 @@ export default function NexusPointPortfolio() {
       badge: "Execution Specialist",
       gradient: "linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.05))",
       borderColor: "rgba(245, 158, 11, 0.4)",
-      description:
-        "Executes assigned tasks, updates progress statuses, and collaborates with team members.",
+      description: "Executes assigned tasks, updates progress statuses, and collaborates with team members.",
       responsibilities: [
         "View assigned tasks categorized by project & module",
         "Update task statuses dynamically (Pending → In Progress → Under Review)",
@@ -113,48 +121,111 @@ export default function NexusPointPortfolio() {
     }
   };
 
+  const sampleKanbanTasks = [
+    { title: "JWT HTTP-Only Auth", role: "Dev", priority: "High", status: "In Progress" },
+    { title: "RBAC Middleware Security", role: "Admin", priority: "Critical", status: "In Progress" },
+    { title: "Socket.IO Messaging Stream", role: "Dev", priority: "High", status: "Review" },
+    { title: "Multi-tenant Org Schema", role: "PM", priority: "Medium", status: "Completed" },
+    { title: "Netlify Single-Page Redirects", role: "Dev", priority: "High", status: "Completed" }
+  ];
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    setChatMessages([
+      ...chatMessages,
+      { sender: "You (Developer)", text: newMessage, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+    setNewMessage("");
+  };
+
   return (
     <div style={styles.pageContainer}>
       <style>{styles.embeddedCSS}</style>
 
-      {/* HEADER SECTION */}
-      <header style={styles.header}>
-        <div style={styles.badgeContainer}>
-          <span >
-          </span>
-           <img src="icon3.png" width="50px"/>
-           NexusPoint
-        </div>
+      {/* NAVBAR */}
+      <nav style={styles.navbar}>
+        <div style={styles.navContainer}>
+          <div style={styles.logoBox}>
+            <img src="icon3.png" alt="NexusPoint Icon" width="38px" style={{ borderRadius: "8px" }} onError={(e)=>{e.target.style.display='none'}} />
+            <span style={styles.logoText}>NexusPoint</span>
+          </div>
 
-        <h1 style={styles.title}>Project Workflow & System Architecture</h1>
+          <div style={styles.navLinks}>
+            <a href="#features" onClick={() => setActiveTab("overview")} style={styles.navLink}>Workflow</a>
+            <a href="#roles" onClick={() => setActiveTab("roles")} style={styles.navLink}>Roles</a>
+            <a href="#tech" onClick={() => setActiveTab("tech")} style={styles.navLink}>Tech Stack</a>
+            <a href="#roadmap" onClick={() => setActiveTab("roadmap")} style={styles.navLink}>Future Roadmap</a>
+          </div>
 
-        <p style={styles.subtitle}>
-          An interactive overview of{" "}
-          <span style={styles.cyanText}>NexusPoint</span> — a role-based team
-          collaboration platform built with MongoDB, Express.js, React, Node.js,
-          and Socket.IO.
-        </p>
-
-        {/* GET STARTED CTA BUTTON */}
-        <div style={{ marginTop: "24px", marginBottom: "32px" }}>
           <a
             href={LIVE_PROJECT_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="np-btn-primary"
-            style={styles.getStartedBtn}
+            style={styles.navCtaBtn}
+          >
+            <FaRocket />
+            <span>Launch App</span>
+          </a>
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <header style={styles.heroHeader}>
+        <div style={styles.badgeContainer}>
+          {/* <span style={styles.pingDot}>
+          </span> */}
+            <img src="icon3.png" width="50px"/>
+          NexusPoint
+        </div>
+
+        <h1 style={styles.heroTitle}>
+          All-in-One Role Based & <br />
+          <span style={styles.gradientText}>Project Management Platform</span>
+        </h1>
+
+        <p style={styles.heroSubtitle}>
+          Streamline enterprise operations, team delegation, and real-time collaboration with a robust 5-tier role hierarchy, Socket.IO channels, and dynamic MongoDB schemas.
+        </p>
+
+        {/* HERO CTA BUTTONS */}
+        <div style={styles.heroCtaGroup}>
+          <a
+            href={LIVE_PROJECT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="np-btn-primary"
+            style={styles.heroPrimaryBtn}
           >
             <FaRocket style={{ fontSize: "1.1rem" }} />
             <span>Get Started / Launch Live App</span>
             <FaExternalLinkAlt style={{ fontSize: "0.85rem", opacity: 0.8 }} />
           </a>
+
+          <button
+            onClick={() => {
+              setActiveTab("overview");
+              document.getElementById("interactive-section")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            style={styles.heroSecondaryBtn}
+          >
+            <FaProjectDiagram />
+            <span>Explore Architecture</span>
+          </button>
         </div>
 
-        {/* TAB NAVIGATION */}
+        {/* INTERACTIVE PRODUCT PREVIEW (KANBAN + SOCKET CHAT DEMO) */}
+        
+      </header>
+
+      {/* DOCUMENTATION & ARCHITECTURE TABS SECTION */}
+      <section id="interactive-section" style={styles.mainSection}>
+        {/* TAB NAVIGATION BAR */}
         <div style={styles.tabNav}>
           {[
             { id: "overview", label: "Workflow & Hierarchy", icon: <FaProjectDiagram /> },
-            { id: "roles", label: "Roles & Access", icon: <FaUserShield /> },
+            { id: "roles", label: "Roles & Access Matrix", icon: <FaUserShield /> },
             { id: "tech", label: "Tech Architecture", icon: <FaServer /> },
             { id: "roadmap", label: "Future Scope", icon: <FaRobot /> }
           ].map((tab) => (
@@ -171,13 +242,10 @@ export default function NexusPointPortfolio() {
             </button>
           ))}
         </div>
-      </header>
 
-      {/* MAIN CONTAINER */}
-      <main style={styles.main}>
         {/* TAB 1: WORKFLOW & HIERARCHY */}
         {activeTab === "overview" && (
-          <div className="np-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+          <div className="np-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px", marginTop: "32px" }}>
             <div style={styles.card}>
               <h2 style={styles.sectionTitle}>
                 <FaLayerGroup style={{ color: "#06b6d4" }} /> Dynamic Entity Hierarchy
@@ -232,7 +300,7 @@ export default function NexusPointPortfolio() {
 
         {/* TAB 2: ROLES & RESPONSIBILITIES */}
         {activeTab === "roles" && (
-          <div className="np-fade-in" style={styles.rolesContainer}>
+          <div className="np-fade-in" style={{ ...styles.rolesContainer, marginTop: "32px" }}>
             <div style={styles.roleSidebar}>
               <h3 style={styles.sidebarTitle}>Select User Role</h3>
               {Object.keys(roleData).map((roleKey) => {
@@ -305,7 +373,7 @@ export default function NexusPointPortfolio() {
 
         {/* TAB 3: TECH ARCHITECTURE */}
         {activeTab === "tech" && (
-          <div className="np-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+          <div className="np-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px", marginTop: "32px" }}>
             <div style={styles.grid3}>
               <div style={styles.card}>
                 <div style={{ ...styles.techTitle, color: "#22d3ee" }}>
@@ -362,7 +430,7 @@ export default function NexusPointPortfolio() {
 
         {/* TAB 4: FUTURE ROADMAP */}
         {activeTab === "roadmap" && (
-          <div className="np-fade-in">
+          <div className="np-fade-in" style={{ marginTop: "32px" }}>
             <div style={styles.roadmapCard}>
               <h2 style={{ ...styles.sectionTitle, color: "#fff" }}>
                 <FaRobot style={{ color: "#06b6d4" }} /> Next Evolution: NexusPoint AI & Client Suite
@@ -405,10 +473,14 @@ export default function NexusPointPortfolio() {
             </div>
           </div>
         )}
-      </main>
+      </section>
 
+      {/* FOOTER */}
       <footer style={styles.footer}>
-        NexusPoint Platform Architecture • Full Stack Technical Portfolio Documentation
+        <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontWeight: 700, color: "#f1f5f9" }}>
+          NexusPoint • Multi-Tenant Project Management & Collaboration Platform
+        </div>
+        <div>Full Stack Architecture • Designed & Developed for Enterprise Operations</div>
       </footer>
     </div>
   );
@@ -421,11 +493,64 @@ const styles = {
     backgroundColor: "#020617",
     color: "#f1f5f9",
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    padding: "24px 16px 48px 16px"
+    paddingBottom: "48px"
   },
-  header: {
+  navbar: {
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+    backgroundColor: "rgba(2, 6, 23, 0.85)",
+    backdropFilter: "blur(16px)",
+    borderBottom: "1px solid #1e293b"
+  },
+  navContainer: {
     maxWidth: "1280px",
-    margin: "0 auto 40px auto",
+    margin: "0 auto",
+    padding: "14px 24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  logoBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  },
+  logoText: {
+    fontSize: "1.25rem",
+    fontWeight: 800,
+    color: "#ffffff",
+    letterSpacing: "-0.025em"
+  },
+  navLinks: {
+    display: "flex",
+    gap: "24px",
+    alignItems: "center"
+  },
+  navLink: {
+    color: "#94a3b8",
+    textDecoration: "none",
+    fontSize: "0.875rem",
+    fontWeight: 600,
+    transition: "color 0.2s ease"
+  },
+  navCtaBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "8px 18px",
+    borderRadius: "8px",
+    background: "linear-gradient(135deg, #0891b2 0%, #0284c7 100%)",
+    color: "#ffffff",
+    fontSize: "0.875rem",
+    fontWeight: 700,
+    textDecoration: "none",
+    boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)"
+  },
+  heroHeader: {
+    maxWidth: "1280px",
+    margin: "0 auto",
+    padding: "64px 24px 40px 24px",
     textAlign: "center"
   },
   badgeContainer: {
@@ -434,12 +559,12 @@ const styles = {
     gap: "10px",
     padding: "6px 16px",
     borderRadius: "9999px",
-    // backgroundColor: "rgba(6, 182, 212, 0.1)",
+    backgroundColor: "rgba(6, 182, 212, 0.1)",
     border: "1px solid rgba(6, 182, 212, 0.3)",
     color: "#22d3ee",
     fontSize: "0.875rem",
     fontWeight: 600,
-    marginBottom: "16px"
+    marginBottom: "20px"
   },
   pingDot: {
     width: "8px",
@@ -447,28 +572,37 @@ const styles = {
     borderRadius: "50%",
     backgroundColor: "#22d3ee"
   },
-  title: {
-    fontSize: "clamp(2rem, 5vw, 3.5rem)",
+  heroTitle: {
+    fontSize: "clamp(2.5rem, 6vw, 4rem)",
     fontWeight: 400,
-    letterSpacing: "-0.025em",
+    letterSpacing: "-0.03em",
     color: "#ffffff",
-    margin: "0 0 16px 0"
+    margin: "0 0 20px 0",
+    lineHeight: 1
   },
-  subtitle: {
+  gradientText: {
+    background: "linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent"
+  },
+  heroSubtitle: {
     maxWidth: "768px",
-    margin: "0 auto",
+    margin: "0 auto 32px auto",
     color: "#94a3b8",
     fontSize: "1.125rem",
     lineHeight: 1.6
   },
-  cyanText: {
-    color: "#22d3ee",
-    fontWeight: 600
+  heroCtaGroup: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "16px",
+    marginBottom: "48px",
+    flexWrap: "wrap"
   },
-  getStartedBtn: {
+  heroPrimaryBtn: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "12px",
+    gap: "10px",
     padding: "14px 28px",
     borderRadius: "12px",
     background: "linear-gradient(135deg, #0891b2 0%, #0284c7 100%)",
@@ -477,8 +611,161 @@ const styles = {
     fontWeight: 700,
     textDecoration: "none",
     boxShadow: "0 10px 25px -5px rgba(6, 182, 212, 0.4)",
-    transition: "all 0.25s ease",
+    transition: "all 0.25s ease"
+  },
+  heroSecondaryBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "14px 28px",
+    borderRadius: "12px",
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    border: "1px solid #334155",
+    color: "#f1f5f9",
+    fontSize: "1rem",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease"
+  },
+  interactivePreviewBox: {
+    maxWidth: "1024px",
+    margin: "0 auto",
+    backgroundColor: "rgba(15, 23, 42, 0.9)",
+    border: "1px solid #1e293b",
+    borderRadius: "16px",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6)",
+    overflow: "hidden"
+  },
+  previewHeaderBar: {
+    backgroundColor: "#090d16",
+    padding: "10px 16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottom: "1px solid #1e293b"
+  },
+  windowDots: {
+    display: "flex",
+    gap: "6px"
+  },
+  windowDot: {
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%"
+  },
+  previewUrlText: {
+    fontSize: "0.75rem",
+    color: "#64748b",
+    fontFamily: "monospace"
+  },
+  previewLivePill: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontSize: "0.75rem",
+    color: "#22d3ee",
+    fontWeight: 600
+  },
+  previewBodyGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: "16px",
+    padding: "20px"
+  },
+  previewWidgetCard: {
+    backgroundColor: "rgba(2, 6, 23, 0.8)",
+    border: "1px solid #1e293b",
+    borderRadius: "12px",
+    padding: "16px",
+    display: "flex",
+    flexDirection: "column",
+    height: "260px"
+  },
+  widgetHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: "14px",
+    borderBottom: "1px solid #1e293b",
+    paddingBottom: "8px"
+  },
+  kanbanTabPills: {
+    display: "flex",
+    gap: "4px"
+  },
+  kanbanPill: {
+    padding: "3px 8px",
+    borderRadius: "6px",
+    fontSize: "0.7rem",
+    color: "#94a3b8",
+    backgroundColor: "transparent",
+    border: "none",
     cursor: "pointer"
+  },
+  kanbanPillActive: {
+    backgroundColor: "#0891b2",
+    color: "#fff"
+  },
+  kanbanTaskList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    overflowY: "auto"
+  },
+  kanbanTaskCard: {
+    backgroundColor: "#0f172a",
+    border: "1px solid #1e293b",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  chatMessageFeed: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    overflowY: "auto",
+    marginBottom: "10px"
+  },
+  chatBubble: {
+    backgroundColor: "#0f172a",
+    border: "1px solid #1e293b",
+    borderRadius: "8px",
+    padding: "8px 10px"
+  },
+  chatBubbleHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  chatInputRow: {
+    display: "flex",
+    gap: "6px"
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+    border: "1px solid #1e293b",
+    borderRadius: "6px",
+    padding: "6px 10px",
+    color: "#fff",
+    fontSize: "0.75rem",
+    outline: "none"
+  },
+  chatSendBtn: {
+    backgroundColor: "#0891b2",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 12px",
+    cursor: "pointer"
+  },
+  mainSection: {
+    maxWidth: "1280px",
+    margin: "64px auto 0 auto",
+    padding: "0 24px"
   },
   tabNav: {
     display: "flex",
@@ -489,7 +776,7 @@ const styles = {
     padding: "6px",
     borderRadius: "14px",
     border: "1px solid #1e293b",
-    maxWidth: "640px",
+    maxWidth: "720px",
     margin: "0 auto"
   },
   tabBtn: {
@@ -510,10 +797,6 @@ const styles = {
     backgroundColor: "#0891b2",
     color: "#ffffff",
     boxShadow: "0 4px 14px rgba(8, 145, 178, 0.4)"
-  },
-  main: {
-    maxWidth: "1280px",
-    margin: "0 auto"
   },
   card: {
     backgroundColor: "rgba(15, 23, 42, 0.6)",
@@ -782,6 +1065,9 @@ const styles = {
     color: "#64748b"
   },
   embeddedCSS: `
+    html {
+      scroll-behavior: smooth;
+    }
     .np-btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 14px 30px -4px rgba(6, 182, 212, 0.6) !important;
