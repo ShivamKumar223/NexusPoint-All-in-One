@@ -27,7 +27,7 @@ const httpServer = createServer(app);
 app.use(express.json());
 
 const corsOptions = {
-  origin: ["https://nexuspointtt.netlify.app", "http://localhost:5173"],
+  origin: ["https://nexuspoint-pg.netlify.app/", "http://localhost:5173"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
